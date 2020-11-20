@@ -52,7 +52,7 @@ class Maps extends Component {
     }
 
     componentDidMount() {
-        axios.get(host + '/maps?igns=seya,seya2')
+        axios.get(host + '/maps') // axios.get(host + '/maps?igns=seya,seya2')
             .then(response => {
                 this.setState({ maps_data: response.data, is_loaded: true });
             });
