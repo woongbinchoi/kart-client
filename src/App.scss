@@ -1,12 +1,139 @@
 /*EPL THEME COLOR*/
-$epl-blue: #04f5ff;
+$epl-blue: #005fcc;
 $epl-red: #e90052;
 $epl-white: #ffffff;
 $epl-green: #00ff85;
-$epl-black: #38003c;
 $epl-yellow: #EAFF04;
 /*EPL THEME COLOR*/
 
+$kart-white: #ffffff;
+$kart-white-background: #f9f9fa;
+$kart-white-border: #f2f2f2;
+$kart-blue: #005fcc;
+
+
+body {
+	background-color: $kart-white-background;
+}
+
+.content {
+	margin-left: 8%;
+	margin-right: 8%;
+	margin-bottom: 15%;
+	margin-top: 48px;
+	width: 84%;
+}
+
+ul {
+	list-style-type: none;
+	padding-inline-start: 0;
+	margin: 0;
+}
+
+.user_ranking_container {
+	h1 {
+		padding: 0;
+		margin: 0 0 40px 0;
+
+		.highlight {
+			color: $kart-blue;
+		}
+	}
+
+	.user_ranking_content {
+		width: 100%;
+		background-color: $kart-white;
+		display: flex;
+
+		span {
+			padding: 16px;
+			padding-top: 0;
+			padding-right: 0;
+			
+			&.user_ranking_search {
+				width: 25%;
+				background-color: $kart-blue;
+				padding-right: 0;
+				padding-left: 0;
+
+				.user_ranking {
+					div {
+						border: 1px solid $kart-white;
+
+						&.active_tab {
+							background-color: $kart-white;
+							span {
+								color: $kart-blue;
+							}
+						}
+					}
+			
+					span {
+						width: 100%;
+						display: inline-block;
+						color: $kart-white;
+						padding: 16px 0 16px 0;
+						text-align: center;
+						font-weight: 700;
+						cursor: pointer;
+					}
+				}
+			}
+			
+			&.user_ranking_records {
+				width: 75%;
+				margin-left: auto;
+  				order: 2;
+
+				.user_ranking {
+					div {
+						width: 100%;
+						border: 1px solid $kart-white-border;
+						margin-bottom: 5px;
+					}
+			
+					span {
+						display: inline-block;
+						background-color: $kart-white;
+						padding: 10px 0 10px 0;
+						text-align: center;
+						font-weight: 700;
+			
+						&.rank {
+							width: 10%;
+						}
+						&.ign {
+							width: 70%;
+							text-align: left;
+						}
+						&.elo {
+							width: 20%;
+							color: $kart-blue;
+						}
+					}
+			
+					li:first-child {
+						div {
+							margin-bottom: 0;
+							padding: 5px 0 5px 0;
+							background-color: $kart-blue;
+						}
+			
+						span {
+							background-color: $kart-blue;
+							color: $kart-white;
+							font-weight: 700;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+//////////////////////// Remove this later ////////////////////////////////////
 .header {
 	background-color: $epl-green;
 	display: flex;
@@ -19,7 +146,7 @@ $epl-yellow: #EAFF04;
 
 	h1 {
 		display: inline-block;
-		color: $epl-black;
+		color: $kart-blue;
 		font-size: 48px;
 		margin: auto;
 		margin-left: 0;
@@ -31,7 +158,7 @@ $epl-yellow: #EAFF04;
 	top: 0;
 	position: sticky;
 	z-index: 1000;
-	background-color: $epl-black;
+	background-color: $kart-blue;
 }
 
 .navigator span {
@@ -45,22 +172,13 @@ $epl-yellow: #EAFF04;
 
 	&:active {
 		background-color: $epl-white;
-		color: $epl-black;
+		color: $kart-blue;
 	}
 
 	&.active_link {
 		background-color: $epl-white;
-		color: $epl-black;
+		color: $kart-blue;
 	}
-}
-
-
-.content {
-	margin-left: 15%;
-	margin-right: 15%;
-	margin-bottom: 15%;
-	margin-top: 48px;
-	width: 70%;
 }
 
 .predicted_match_container {
@@ -100,7 +218,7 @@ $epl-yellow: #EAFF04;
 			background-color: $epl-green;
 		}
 		&.draw_prob {
-			background-color: $epl-black;
+			background-color: $kart-blue;
 			color: $epl-white;
 		}
 	}
@@ -136,7 +254,7 @@ $epl-yellow: #EAFF04;
 		}
 	}
 	.match_score {
-		background-color: $epl-black;
+		background-color: $kart-blue;
 		color: $epl-white;
 		padding: 3px 16px;
 		margin: 0 8px;
@@ -153,3 +271,4 @@ $epl-yellow: #EAFF04;
 		text-decoration: none;
 	}
 }
+//////////////////////// Remove this later ////////////////////////////////////

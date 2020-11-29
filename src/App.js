@@ -1,12 +1,24 @@
 import React, { Component } from "react";
 import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
-import { Chart } from "react-google-charts";
+// import { Chart } from "react-google-charts";
 import axios from 'axios';
-import logo from './premier_league_logo.svg';
+// import logo from './premier_league_logo.svg';
 import './App.scss';
 
 
 const host = 'http://localhost:5000'
+const map_dict = {
+    '빌리지 고가의 질주': '1:35:00',
+    'WKC 코리아 서킷': '1:45:00',
+    '사막 빙글빙글 공사장': '1:52:00',
+    '대저택 은밀한 지하실': '1:55:00',
+    '노르테유 익스프레스': '1:45:00',
+    '빌리지 운명의 다리': '1:59:00',
+    '해적 로비 절벽의 전투': '1:50:00',
+    '쥐라기 공룡 결투장': '1:48:00',
+}
+
+const tierPoint = 'Tier Point'
 
 class Home extends Component {
     state = {
@@ -60,7 +72,6 @@ class Maps extends Component {
 
     render() {
         const { maps_data } = this.state
-        console.log(maps_data)
         return (
             <div>
                 {maps_data.map((user_record) =>
@@ -71,6 +82,105 @@ class Maps extends Component {
                         )}
                     </div>
                 )}
+            </div>
+        );
+    }
+}
+
+class UserRanking extends Component {
+    state = {
+        map_data: {
+            [tierPoint]: [],
+        },
+        is_loaded: false,
+        current_tab: tierPoint,
+    }
+
+    componentDidMount() {
+        axios.get(host + '/chart')
+            .then(response => {
+                const elo_data = response.data
+                const elo_list = [{'rank': '#', 'ign': 'Nickname', 'elo': tierPoint}].concat(elo_data)
+                this.setState({ 
+                    map_data: {
+                        ...this.state.map_data, [tierPoint]: elo_list
+                    },
+                    is_loaded: true,
+                    current_tab: tierPoint
+                });
+            });
+    }
+
+    handleSideBarClick(map_name) {
+        if ((!!this.state.map_data &&
+            !!this.state.map_data[map_name] &&
+            this.state.map_data[map_name].length > 0) ||
+            map_name === tierPoint
+        ) {
+            this.setState({ current_tab: map_name });
+        } else {
+            axios.get(host + '/maps?map=' + map_name)
+                .then(response => {
+                    const map_list = [{'rank': '#', 'ign': 'Nickname', 'record': 'Record'}].concat(response.data)
+                    this.setState({ 
+                        map_data: {
+                            ...this.state.map_data, [map_name]: map_list
+                        },
+                        current_tab: map_name
+                    });
+                });
+        }
+    }
+
+    renderRecord(record) {
+        const record_data = (!!record.elo) ? record.elo : record.record;
+        return (
+            <li key={record.rank}>
+                <div className='span_div'>
+                    <span className='rank'>{record.rank}</span>
+                    <span className='ign'>{record.ign}</span>
+                    <span className='elo'>{record_data}</span>
+                </div>
+            </li>
+        );
+    }
+
+    renderSideBar(map_name) {
+        const { current_tab } = this.state
+
+        return (
+            <li key={map_name}>
+                <div className={map_name === current_tab ? 'active_tab' : ''}>
+                    <span onClick={() => this.handleSideBarClick(map_name)}>{map_name}</span>
+                </div>
+            </li>
+        );
+    }
+
+    render() {
+        const { map_data, current_tab } = this.state;
+        const current_data = map_data[current_tab];
+        const map_list = [tierPoint].concat(Object.keys(map_dict))
+
+        return (
+            <div className='user_ranking_container'>
+                <h1>User Ranking by <span className='highlight'>{current_tab}</span></h1>
+                <div className='user_ranking_content'>
+                    <span className='user_ranking_search'>
+                        <ul className='user_ranking'>
+                            {map_list.map((map_name) =>
+                                this.renderSideBar(map_name)
+                            )}
+                        </ul>
+                    </span>
+                    <span className='user_ranking_records'>
+                        <ul className='user_ranking'>
+                            {current_data.map((user_record) =>
+                                this.renderRecord(user_record)
+                            )}
+                        </ul>
+                    </span>
+                </div>
             </div>
         );
     }
@@ -106,12 +216,16 @@ class App extends Component {
                             <Link to="/maps">
                                 <span onClick={() => this.handleLinkClick('maps')} className={'maps' === this.state.current_page ? 'active_link' : ''}>Maps</span>
                             </Link>
+                            <Link to="/user_ranking">
+                                <span onClick={() => this.handleLinkClick('user_ranking')} className={'user_ranking' === this.state.current_page ? 'active_link' : ''}>User Ranking</span>
+                            </Link>
                         </div>
 
                         <div className="content">
                             <Switch>
                                 <Route path="/" exact component={Home} />
                                 <Route path="/maps" exact component={Maps} />
+                                <Route path="/user_ranking" exact component={UserRanking} />
                             </Switch>
                         </div>
                     </div>
