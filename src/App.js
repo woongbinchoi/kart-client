@@ -8,14 +8,20 @@ import './App.scss';
 
 const host = 'http://localhost:5000'
 const map_dict = {
-    '빌리지 고가의 질주': '1:35:00',
-    'WKC 코리아 서킷': '1:45:00',
-    '사막 빙글빙글 공사장': '1:52:00',
-    '대저택 은밀한 지하실': '1:55:00',
-    '노르테유 익스프레스': '1:45:00',
-    '빌리지 운명의 다리': '1:59:00',
-    '해적 로비 절벽의 전투': '1:50:00',
-    '쥐라기 공룡 결투장': '1:48:00',
+    '빌리지 고가의 질주': '01:35:00',
+    'WKC 코리아 서킷': '01:45:00',
+    '사막 빙글빙글 공사장': '01:52:00',
+    '대저택 은밀한 지하실': '01:55:00',
+    '노르테유 익스프레스': '01:45:00',
+    '빌리지 운명의 다리': '01:59:00',
+    '해적 로비 절벽의 전투': '01:50:00',
+    '쥐라기 공룡 결투장': '01:48:00',
+}
+const map_levels = {
+    'R': ['빌리지 고가의 질주'],
+    'L3': ['WKC 코리아 서킷', '빌리지 운명의 다리', '쥐라기 공룡 결투장'],
+    'L2': ['해적 로비 절벽의 전투', '사막 빙글빙글 공사장', '대저택 은밀한 지하실'],
+    'L1': ['노르테유 익스프레스'],
 }
 
 const tierPoint = 'Tier Point'
@@ -29,7 +35,6 @@ class Home extends Component {
     componentDidMount() {
         axios.get('https://epl-server.herokuapp.com/summary')
             .then(response => {
-                console.log(response.data);
                 this.setState({ summary: response.data, is_loaded: true });
             });
     }
@@ -58,30 +63,168 @@ class Home extends Component {
 }
 
 class Maps extends Component {
-    state = {
-        maps_data: [],
-        is_loaded: false
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            maps_data: {},
+            changed_maps: {},
+            error_maps: {},
+            submit_error: '',
+            is_loaded: false
+        }
+
+        this.handleInputChange = this.handleInputChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     componentDidMount() {
-        axios.get(host + '/maps') // axios.get(host + '/maps?igns=seya,seya2')
+        axios.get(host + '/maps?igns=seya')
             .then(response => {
-                this.setState({ maps_data: response.data, is_loaded: true });
+                this.setState({ maps_data: response.data[0], is_loaded: true });
             });
     }
 
-    render() {
-        const { maps_data } = this.state
+    formatTime = (timestamp) => (Math.min(parseInt(timestamp), 59).toString().padStart(timestamp.length, "0"));
+    normalizeInput(curr, prev) {
+        if (!curr) return curr;
+        const currVal = curr.replace(/[^\d]/g, '').replace(/\s/g, '');
+        const currLen = currVal.length;
+
+        if (!prev || prev.length < curr.length) {
+            if (!prev && !currVal) return '';
+            if (currLen < 3) return this.formatTime(currVal);
+            if (currLen < 5) return `${this.formatTime(currVal.slice(0, 2))}:${this.formatTime(currVal.slice(2))}`;
+            return `${this.formatTime(currVal.slice(0, 2))}:${this.formatTime(currVal.slice(2, 4))}:${currVal.slice(4, 6)}`;
+        }
+        return '';
+        
+    };
+    handleInputChange({ target: { name, value } }) {
+        const { changed_maps } = this.state;
+        const copy_error_maps = {...this.state.error_maps}
+        if (name in copy_error_maps) delete copy_error_maps[name]
+
+        this.setState(prevState => ({
+            changed_maps: {
+                ...changed_maps,
+                [name]: this.normalizeInput(
+                    value,
+                    name in prevState.changed_maps ? prevState.changed_maps[name] : ''
+                )},
+            error_maps: copy_error_maps,
+            submit_error: ''
+        }));
+    };
+
+    validateRecord = (record) => (record.length === 8 && record.match(/^[0-5][0-9]:[0-5][0-9]:\d{2}$/));
+    validateMinimum(record, minimum) {
+        const recordInt = parseInt(record.slice(0, 2)) * 6000 + parseInt(record.slice(3, 5)) * 100 + parseInt(record.slice(6));
+        const minimumInt = parseInt(minimum.slice(0, 2)) * 6000 + parseInt(minimum.slice(3, 5)) * 100 + parseInt(minimum.slice(6));
+        return minimumInt < recordInt;
+    };
+    handleSubmit(e) {
+        e.preventDefault();
+
+        const { changed_maps } = this.state;
+        const submit_dict = {};
+        const errors = {};
+
+        let changed = false;
+        Object.keys(changed_maps).forEach((map_name, idx) => {
+            const record = changed_maps[map_name];
+            if (record !== '') {
+                changed = true;
+                if (!this.validateRecord(record)) {
+                    errors[map_name] = 'Invalid time format. The record should follow \'XX:XX:XX\'. (Ex. 01:42:59)';
+                } else if (!this.validateMinimum(record, map_dict[map_name])) {
+                    errors[map_name] = 'Enter a valid record.';
+                } else {
+                    submit_dict[map_name] = changed_maps[map_name];
+                }
+            }
+        });
+
+        if (Object.keys(errors).length === 0 &&
+            Object.keys(submit_dict).length > 0 &&
+            changed) {
+            axios.post(host + '/maps', {
+                ign: 'seya',
+                maps: submit_dict
+            }).then((response) => {
+                window.location.reload();
+            }, (error) => {
+                this.setState({ submit_error: 'Unexpected Error occurred. Please try again.'})
+            });
+        } else {
+            this.setState({ 
+                error_maps: errors,
+                submit_error: !changed ? 'Enter a record to submit.' : ''
+            });
+        }
+    }
+
+    renderMapRow(map_name) {
+        const { maps_data, changed_maps, error_maps } = this.state;
+
         return (
-            <div>
-                {maps_data.map((user_record) =>
-                    <div key={user_record['ign']}>
-                        <p key='ign'>{user_record['ign']}</p>
-                        {Object.keys(user_record).map((key, idx) =>
-                            key !== 'ign' && (<li key={idx}>{key} {user_record[key]}</li>)
-                        )}
+            <li key={map_name}>
+                <div className='map_container'>
+                    <div>
+                        <p className='map_name'>{map_name}</p>
+                        <div className='break_column'></div>
+                        <input
+                            className={map_name in error_maps ? 'map_error' : ''}
+                            key={map_name}
+                            name={map_name}
+                            type='text'
+                            placeholder={map_name in maps_data ? maps_data[map_name] : 'Ex) 01:42:59'}
+                            value={map_name in changed_maps ? changed_maps[map_name] : ''}
+                            onChange={this.handleInputChange}
+                        />
                     </div>
-                )}
+                    <div className='break_column'></div>
+                    {map_name in error_maps && <p className='map_error'>{error_maps[map_name]}</p>}
+                </div>
+            </li>
+        );
+    }
+
+    // TODO: Make cancel button work, disable submit when error occur, display which maps have error after clicking submit
+    render() {
+        const { submit_error, error_maps } = this.state;
+        
+        const disabled = (Object.keys(error_maps).length !== 0 || !!submit_error)
+        const maps_to_check = Object.keys(error_maps).join(', ')
+        const maps_error_message = !!maps_to_check ? 'Invalid record: ' + maps_to_check : ''
+
+        return (
+            <div className='update_maps_container'>
+                <h1>Update Records</h1>
+                <form onSubmit={this.handleSubmit}>
+                    {Object.keys(map_levels).map((level, idx) =>
+                        <div key={level} className={level + '_level level_container'}>
+                            <h2>{level}</h2>
+                            <ul>
+                                { map_levels[level].map((map_name) => this.renderMapRow(map_name)) }
+                            </ul>
+                        </div>
+                    )}
+                    <div className='update_maps_submit'>
+                        <input 
+                            type='button'
+                            value='Cancel'
+                            onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href='/user_ranking';
+                            }}
+                        />
+                        <input type='submit' value='Submit' disabled={disabled} />
+                        <div className='break_column'></div>
+                        {!!submit_error && <p className='submit_error'>{ submit_error }</p>}
+                        {!!maps_error_message && <p className='submit_error'>{ maps_error_message }</p>}
+                    </div>
+                </form>
             </div>
         );
     }
@@ -196,7 +339,7 @@ class App extends Component {
     }
 
     getLinkClassName(path) {
-        return path === this.state.current_page ? 'active_link' : false;
+        return path === this.state.current_page ? 'active_link' : '';
     }
 
     componentDidMount() {
@@ -211,13 +354,13 @@ class App extends Component {
                     <div>
                         <div className="navigator">
                             <Link to="/">
-                                <span onClick={() => this.handleLinkClick('')} className={'' === this.state.current_page ? 'active_link' : ''}>Home</span>
+                                <span onClick={() => this.handleLinkClick('')} className={ this.getLinkClassName('') }>Home</span>
                             </Link>
                             <Link to="/maps">
-                                <span onClick={() => this.handleLinkClick('maps')} className={'maps' === this.state.current_page ? 'active_link' : ''}>Maps</span>
+                                <span onClick={() => this.handleLinkClick('maps')} className={ this.getLinkClassName('maps') }>Maps</span>
                             </Link>
                             <Link to="/user_ranking">
-                                <span onClick={() => this.handleLinkClick('user_ranking')} className={'user_ranking' === this.state.current_page ? 'active_link' : ''}>User Ranking</span>
+                                <span onClick={() => this.handleLinkClick('user_ranking')} className={ this.getLinkClassName('user_ranking') }>User Ranking</span>
                             </Link>
                         </div>
 

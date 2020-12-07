@@ -10,6 +10,11 @@ $kart-white: #ffffff;
 $kart-white-background: #f9f9fa;
 $kart-white-border: #f2f2f2;
 $kart-blue: #005fcc;
+$kart-blue-darker: #014ea7;
+$kart-blue-darkest: #034188;
+$kart-grey: #dadce0;
+$kart-grey-dark: #3c4043;
+$kart-red: red;
 
 
 body {
@@ -30,9 +35,109 @@ ul {
 	margin: 0;
 }
 
+h1, h2 {
+	padding: 0;
+	margin: 0;
+}
+
+.update_maps_container {
+	h1, h2 {
+		margin: 0 0 32px 0;
+	}
+	p {
+		padding: 0;
+		margin: 0;
+		color: $kart-grey-dark;
+	}
+	p.submit_error {
+		color: red;
+	}
+	input {
+		padding: 16px;
+		margin: 8px 0;
+		font-size: 16px;
+		border: 1px solid $kart-grey-dark;
+		border-radius: 4px;
+		background: transparent;
+	}
+
+	.level_container {
+		padding: 24px;
+		margin-bottom: 24px;
+		border: 1px solid $kart-grey;
+		border-radius: 8px;
+	}
+
+	.map_container {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		margin-bottom: 32px;
+		
+		.break_column {
+			flex-basis: 100%;
+			width: 0;
+		}
+
+		p.map_error {
+			color: red;
+		}
+		input.map_error {
+			border-color: red;
+		}
+	}
+
+	.update_maps_submit {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+
+		input {
+			margin: 16px;
+			padding: 12px 16px;
+			border: none;
+			cursor:pointer;
+			
+			&:focus {
+				outline: none;
+			}
+
+			&[type='submit'] {
+				background-color: $kart-blue;
+				color: $kart-white;
+
+				&:hover {
+					background-color: $kart-blue-darker;
+				}
+				&:active {
+					background-color: $kart-blue-darkest;
+				}
+				&:disabled {
+					background-color: $kart-grey;
+					cursor: default;
+				}
+			}
+			&[type='button'] {
+				color: $kart-blue;
+
+				&:hover {
+					background-color: rgba(0, 95, 204, 0.1);
+				}
+				&:active {
+					background-color: rgba(0, 95, 204, 0.3);
+				}
+			}
+		}
+
+		.break_column {
+			flex-basis: 100%;
+			width: 0;
+		}
+	}
+}
+
 .user_ranking_container {
 	h1 {
-		padding: 0;
 		margin: 0 0 40px 0;
 
 		.highlight {
