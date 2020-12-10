@@ -329,6 +329,32 @@ class UserRanking extends Component {
     }
 }
 
+class UserLogin extends Component {
+    state = {
+        maps_data: [],
+        is_loaded: false
+    }
+
+    obtainUsername(username) {
+    }
+
+    render() {
+        return (
+            <article className='user_login'>
+                <div>
+                    <h2>Login to update your records!</h2>
+                    <input type="text" placeholder="ID"></input>
+                    <br></br>
+                    <input type="text" placeholder="Password"></input>
+                    <br></br>
+                    <br></br>
+                    <button type="button">Sign in</button>
+                </div>
+            </article>
+        );
+    }
+}
+
 class App extends Component {
     state = {
         current_page: null
@@ -362,6 +388,9 @@ class App extends Component {
                             <Link to="/user_ranking">
                                 <span onClick={() => this.handleLinkClick('user_ranking')} className={ this.getLinkClassName('user_ranking') }>User Ranking</span>
                             </Link>
+                            <Link to="/user_login">
+                                <span onClick={() => this.handleLinkClick('user_login')} className={'login' === this.state.current_page ? 'active_link' : ''}>Login</span>
+                            </Link>
                         </div>
 
                         <div className="content">
@@ -369,6 +398,7 @@ class App extends Component {
                                 <Route path="/" exact component={Home} />
                                 <Route path="/maps" exact component={Maps} />
                                 <Route path="/user_ranking" exact component={UserRanking} />
+                                <Route path="/user_login" exact component={UserLogin} />
                             </Switch>
                         </div>
                     </div>
