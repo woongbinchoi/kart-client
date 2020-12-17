@@ -15,6 +15,7 @@ $kart-blue-darkest: #034188;
 $kart-grey: #dadce0;
 $kart-grey-dark: #3c4043;
 $kart-red: red;
+$kart-black: black;
 
 
 body {
@@ -38,6 +39,85 @@ ul {
 h1, h2 {
 	padding: 0;
 	margin: 0;
+}
+
+.horizontal_parent {
+	display: flex;
+	width: 100%;
+	
+	.horizontal_child {
+		flex: 1;
+	}
+}
+
+.home_container {
+	h1 {
+		margin: 0 0 32px 0;
+	}
+
+	.profile_container {
+		border-bottom: 2px solid $kart-grey;
+	}
+	
+	.performing_container {
+		margin: 12px -12px;
+
+		.row_div {
+			margin-bottom: 40px;
+		}
+
+		.performing_span {
+			// border: 1px solid $kart-grey;
+			// border-radius: 4px;
+			margin: 12px;
+			// padding: 16px;
+			text-align: center;
+			// background-color: $kart-white;
+
+			.performing_span_header {
+				border-bottom: 1px solid $kart-grey;
+				padding: 12px 0;
+			}
+
+			li {
+				margin: 8px;
+			}
+			p {
+				margin: 0;
+				padding: 4px 0;
+				font-size: smaller;
+				font-weight: 200;
+				color: $kart-grey-dark;
+			}
+
+			.user_records {
+				div {
+					&.span_div {
+						border-bottom: 2px solid $kart-white-border;
+						padding: 4px 0;
+					}
+				}
+
+				span {
+					display: inline-block;
+					padding: 10px 0;
+					text-align: center;
+				}
+
+				li:first-child {
+					div {
+						padding-top: 5px;
+						border-bottom: 1px solid $kart-blue;
+					}
+		
+					span {
+						color: $kart-blue;
+						font-weight: bold;
+					}
+				}
+			}
+		}
+	}
 }
 
 .update_maps_container {
@@ -146,29 +226,20 @@ h1, h2 {
 	}
 
 	.user_ranking_content {
-		width: 100%;
-		background-color: $kart-white;
-		display: flex;
-
-		span {
-			padding: 16px;
-			padding-top: 0;
-			padding-right: 0;
-			
+		span {	
 			&.user_ranking_search {
-				width: 25%;
-				background-color: $kart-blue;
-				padding-right: 0;
-				padding-left: 0;
+				width: 20%;
 
 				.user_ranking {
 					div {
-						border: 1px solid $kart-white;
+						border-right: 2px solid $kart-grey;
 
 						&.active_tab {
-							background-color: $kart-white;
+							border-right: 2px solid $kart-blue;
+							color: $kart-blue;
+							
 							span {
-								color: $kart-blue;
+								font-weight: bold;
 							}
 						}
 					}
@@ -176,10 +247,8 @@ h1, h2 {
 					span {
 						width: 100%;
 						display: inline-block;
-						color: $kart-white;
-						padding: 16px 0 16px 0;
+						padding: 15px 0;
 						text-align: center;
-						font-weight: 700;
 						cursor: pointer;
 					}
 				}
@@ -189,20 +258,20 @@ h1, h2 {
 				width: 75%;
 				margin-left: auto;
   				order: 2;
-
 				.user_ranking {
 					div {
 						width: 100%;
-						border: 1px solid $kart-white-border;
-						margin-bottom: 5px;
+						
+						&.span_div {
+							border-bottom: 2px solid $kart-white-border;
+							padding: 4px 0;
+						}
 					}
 			
 					span {
 						display: inline-block;
-						background-color: $kart-white;
-						padding: 10px 0 10px 0;
+						padding: 10px 0;
 						text-align: center;
-						font-weight: 700;
 			
 						&.rank {
 							width: 10%;
@@ -214,20 +283,19 @@ h1, h2 {
 						&.elo {
 							width: 20%;
 							color: $kart-blue;
+							font-weight: bold;
 						}
 					}
-			
+
 					li:first-child {
 						div {
-							margin-bottom: 0;
-							padding: 5px 0 5px 0;
-							background-color: $kart-blue;
+							padding-top: 5px;
+							border-bottom: 1px solid $kart-blue;
 						}
 			
 						span {
-							background-color: $kart-blue;
-							color: $kart-white;
-							font-weight: 700;
+							color: $kart-blue;
+							font-weight: bold;
 						}
 					}
 				}
@@ -237,143 +305,30 @@ h1, h2 {
 }
 
 
-
-//////////////////////// Remove this later ////////////////////////////////////
-.header {
-	background-color: $epl-green;
-	display: flex;
-
-	.header_logo {
-		width: 100px;
-		height: 100px;
-		padding: 16px 48px;
-	}
-
-	h1 {
-		display: inline-block;
-		color: $kart-blue;
-		font-size: 48px;
-		margin: auto;
-		margin-left: 0;
-	}
-}
-
 .navigator {
 	width: 100%;
 	top: 0;
 	position: sticky;
 	z-index: 1000;
-	background-color: $kart-blue;
-}
-
-.navigator span {
-	border-right: solid $epl-white 1px;
-	display: inline-block;
-	cursor: pointer;
-	padding: 16px;
-	text-decoration: none;
-	font-weight: bold;
-	color: $epl-white;
-
-	&:active {
-		background-color: $epl-white;
-		color: $kart-blue;
-	}
-
-	&.active_link {
-		background-color: $epl-white;
-		color: $kart-blue;
-	}
-}
-
-.predicted_match_container {
-	margin-bottom: 12px;
-}
-
-.prob_title {
-	display: inline-block;
-	width: 100%;
-	background-color: rgb(234, 234, 234);
-	padding-top: 8px;
-	padding-bottom: 8px;
-
-	.prob_vs {
-		padding-left: 16px;
-		font-size: 18px;
-	}
-	.prob_date {
-		float: right;
-		padding-right: 16px;
-	}
-}
-
-.prob_bar {
-	width: 100%;
+	background-color: $kart-white-background;
+	display: flex;
 
 	span {
 		display: inline-block;
-		text-align: center;
-		padding-top: 8px;
-		padding-bottom: 8px;
+		cursor: pointer;
+		padding: 12px;
+		margin: 0 4px;
+		color: $kart-black;
+		font-weight: 500;
 
-		&.home_prob {
-			background-color: $epl-blue;
+		&:hover, &.active_link {
+			border-bottom: 2px solid $kart-blue;
+			color: $kart-blue;
 		}
-		&.away_prob {
-			background-color: $epl-green;
-		}
-		&.draw_prob {
-			background-color: $kart-blue;
-			color: $epl-white;
-		}
+	}
+
+	div.right {
+		margin-left: auto;
+		order: 2;
 	}
 }
-
-.previous_match_container {
-	width: 100%;
-	background-color: $epl-white;
-	padding-top: 8px;
-	padding-bottom: 8px;
-	border-bottom: solid rgb(234, 234, 234) 1px;
-
-	&:hover {
-		background-color: rgb(234, 234, 234);
-	}
-	.match_result {
-		padding-left: 64px;
-	}
-	.match_result_date {
-		float: right;
-		padding-right: 16px;
-	}
-	.match_result_team_name {
-		font-size: 18px;
-		width: 160px;
-		max-width: 160px;
-		display: inline-block;
-		&.team_home {
-			text-align: right;
-		}
-		&.team_won {
-			font-weight: bold;
-		}
-	}
-	.match_score {
-		background-color: $kart-blue;
-		color: $epl-white;
-		padding: 3px 16px;
-		margin: 0 8px;
-	}
-}
-
-.content_header {
-	padding-bottom: 8px;
-	border-bottom: solid rgb(234, 234, 234) 2px; 
-}
-
-.home {
-	a {
-		text-decoration: none;
-	}
-}
-//////////////////////// Remove this later ////////////////////////////////////

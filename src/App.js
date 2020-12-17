@@ -28,35 +28,162 @@ const tierPoint = 'Tier Point'
 
 class Home extends Component {
     state = {
-        summary: {},
-        is_loaded: false
+        is_loaded: false,
+        high_25: [],
+        high_25_50: [],
+        low_50: [],
+        level_records: {},
+        map_records: {},
+        num_records: {},
+        rank_records: {},
+        map_percentiles: {},
+        map_levels_dict: {},
+        over_performing_map: [],
+        under_performing_map: [],
+        ign: '',
     }
 
     componentDidMount() {
-        axios.get('https://epl-server.herokuapp.com/summary')
+        const ign = 'wife'
+        axios.get(host + '/home_info?ign=' + ign)
             .then(response => {
-                this.setState({ summary: response.data, is_loaded: true });
+                const map_percentiles = Object.assign(
+                    {}, 
+                    ...Object.keys(response.data.rank_records).map((map_name, idx) => (
+                        {[map_name]: (
+                            Math.round(10000 * response.data.rank_records[map_name] / response.data.num_records[map_name])
+                            / 100).toFixed(2)}
+                    )));
+                this.setState({ 
+                    is_loaded: true,
+                    high_25: response.data.high_25,
+                    high_25_50: response.data.high_25_50,
+                    low_50: response.data.low_50,
+                    level_records: response.data.level_records,
+                    map_records: response.data.map_records,
+                    num_records: response.data.num_records,
+                    rank_records: response.data.rank_records,
+                    map_percentiles: map_percentiles,
+                    map_levels_dict: response.data.map_levels,
+                    over_performing_map: response.data.over_performing_map,
+                    under_performing_map: response.data.under_performing_map,
+                    ign: ign,
+                });
             });
     }
 
     render() {
+        const { 
+            high_25,
+            high_25_50,
+            low_50,
+            level_records,
+            map_records,
+            num_records,
+            rank_records,
+            map_percentiles,
+            map_levels_dict,
+            over_performing_map,
+            under_performing_map,
+            ign,
+        } = this.state;
+
         return (
-            <div className='home'>
-                <h2 className='content_header'>Summary</h2>
-                {this.state.is_loaded && 
-                    <div>
-                        <p>Most likely to win the season: <b>{this.state.summary.winner}</b></p>
-                        <p>Prediction Accuracy: <b>{Math.round(this.state.summary.accuracy * 10000) / 100}%</b></p>
-                        <p>Last Update: <b>{this.state.summary.time}</b></p>
+            <div className='home_container'>
+                <div className='profile_container'>
+                    <h1>{ign}</h1>
+                </div>
+                <div className='records_container'>
+                    <div className='performing_container'>
+                        <div className='horizontal_parent row_div'>
+                            <span className='performing_span horizontal_child'>
+                                <div>
+                                    <div className='performing_span_header'><h2>상위 25%</h2></div>
+                                    <ul>
+                                        {high_25.map((map_name) =>
+                                            <li key={map_name}>{map_name}</li>
+                                        )}
+                                    </ul>
+                                </div>
+                            </span>
+                            <span className='performing_span horizontal_child'>
+                                <div>
+                                    <div className='performing_span_header'><h2>상위 25-50%</h2></div>
+                                    <ul>
+                                        {high_25_50.map((map_name) =>
+                                            <li key={map_name}>{map_name}</li>
+                                        )}
+                                    </ul>
+                                </div>
+                            </span>
+                            <span className='performing_span horizontal_child'>
+                                <div>
+                                    <div className='performing_span_header'><h2>하위 50%</h2></div>
+                                    <ul>
+                                        {low_50.map((map_name) =>
+                                            <li key={map_name}>{map_name}</li>
+                                        )}
+                                    </ul>
+                                </div>
+                            </span>
+                        </div>
+                        <div className='horizontal_parent row_div'>
+                            <span className='performing_span horizontal_child'>
+                                <div>
+                                    <div className='performing_span_header'>
+                                        <h2>비교적으로 기록이 좋은 맵</h2>
+                                        <p>{ign}님의 다른 맵을 비교하여 상대적으로 기록이 좋은 맵을 보여줍니다.</p>
+                                    </div>
+                                    <ul>
+                                        {over_performing_map.map((map_name) =>
+                                            <li key={map_name}>{map_name}</li>
+                                        )}
+                                    </ul>
+                                </div>
+                            </span>
+                            <span className='performing_span horizontal_child'>
+                                <div>
+                                    <div className='performing_span_header'>
+                                        <h2>비교적으로 관심이 더 필요한 맵</h2>
+                                        <p>{ign}님의 다른 맵을 비교하여 상대적으로 노력했을때 더 좋은 기록을 낼 수 있는 맵을 보여줍니다.</p>
+                                    </div>
+                                    <ul>
+                                        {under_performing_map.map((map_name) =>
+                                            <li key={map_name}>{map_name}</li>
+                                        )}
+                                    </ul>
+                                </div>
+                            </span>
+                        </div>
+                        <div className='horizontal_parent row_div'>
+                            <span className='performing_span horizontal_child'>
+                                <div className='performing_span_header'><h2>{ign}님의 기록</h2></div>
+                                <ul className='user_records'>
+                                    <li key='header'>
+                                        <div className='span_div horizontal_parent'>
+                                            <span className='horizontal_child map_name'>이름</span>
+                                            <span className='horizontal_child map_level'>난이도</span>
+                                            <span className='horizontal_child map_record'>기록</span>
+                                            <span className='horizontal_child map_rating'>등급</span>
+                                            <span className='horizontal_child map_ranking'>등수</span>
+                                        </div>
+                                    </li>
+                                    {Object.keys(map_records).map((map_name, idx) =>
+                                        <li key={idx}>
+                                            <div className='span_div horizontal_parent'>
+                                                <span className='horizontal_child map_name'>{map_name}</span>
+                                                <span className='horizontal_child map_level'>{map_levels_dict[map_name]}</span>
+                                                <span className='horizontal_child map_record'>{map_records[map_name]}</span>
+                                                <span className='horizontal_child map_rating'>{level_records[map_name]}</span>
+                                                <span className='horizontal_child map_ranking'>{`${rank_records[map_name]} / ${num_records[map_name]} (${map_percentiles[map_name]}%)`}</span>
+                                            </div>
+                                        </li>
+                                    )}
+                                </ul>
+                            </span>
+                        </div>
                     </div>
-                }
-                <br/>
-                <h2 className='content_header'>Help</h2>
-                <p>If you would like to look at match predictions, <b><a href='/predictions'>Click Predictions</a></b>.</p>
-                <p>If you would like to look at previous matches of the current season, <b><a href='/results'>Click Results</a></b>.</p>
-                <p>If you would like to look at the current standing as well as predicted standings, <b><a href='/standings'>Click Standings</a></b>.</p>
-                <p>If you would like to look at github repo of this website, <b><a href='https://github.com/woongbinchoi/English-Premier-League-Prediction'>Click here</a></b>.</p>
-                <p>If you have any questions for the developer, <b><a href='mailto:woongbinchoi@gmail.com'>Please contact me</a></b>.</p>
+                </div>
             </div>
         );
     }
@@ -190,7 +317,6 @@ class Maps extends Component {
         );
     }
 
-    // TODO: Make cancel button work, disable submit when error occur, display which maps have error after clicking submit
     render() {
         const { submit_error, error_maps } = this.state;
         
@@ -240,7 +366,7 @@ class UserRanking extends Component {
     }
 
     componentDidMount() {
-        axios.get(host + '/chart')
+        axios.get(host + '/elo')
             .then(response => {
                 const elo_data = response.data
                 const elo_list = [{'rank': '#', 'ign': 'Nickname', 'elo': tierPoint}].concat(elo_data)
@@ -308,7 +434,7 @@ class UserRanking extends Component {
         return (
             <div className='user_ranking_container'>
                 <h1>User Ranking by <span className='highlight'>{current_tab}</span></h1>
-                <div className='user_ranking_content'>
+                <div className='user_ranking_content horizontal_parent'>
                     <span className='user_ranking_search'>
                         <ul className='user_ranking'>
                             {map_list.map((map_name) =>
@@ -388,9 +514,14 @@ class App extends Component {
                             <Link to="/user_ranking">
                                 <span onClick={() => this.handleLinkClick('user_ranking')} className={ this.getLinkClassName('user_ranking') }>User Ranking</span>
                             </Link>
-                            <Link to="/user_login">
-                                <span onClick={() => this.handleLinkClick('user_login')} className={'login' === this.state.current_page ? 'active_link' : ''}>Login</span>
-                            </Link>
+                            <div className='right'>
+                                <Link to="/sign_up">
+                                    <span onClick={() => this.handleLinkClick('sign_up')} className={ this.getLinkClassName('sign_up') }>Sign Up</span>
+                                </Link>
+                                <Link to="/sign_in">
+                                    <span onClick={() => this.handleLinkClick('sign_in')} className={ this.getLinkClassName('sign_in') }>Sign In</span>
+                                </Link>
+                            </div>
                         </div>
 
                         <div className="content">
@@ -398,7 +529,7 @@ class App extends Component {
                                 <Route path="/" exact component={Home} />
                                 <Route path="/maps" exact component={Maps} />
                                 <Route path="/user_ranking" exact component={UserRanking} />
-                                <Route path="/user_login" exact component={UserLogin} />
+                                <Route path="/sign_in" exact component={UserLogin} />
                             </Switch>
                         </div>
                     </div>
