@@ -44,6 +44,8 @@ class Home extends Component {
     }
 
     componentDidMount() {
+        console.log(process.env);
+        console.log(server_host);
         axios.get(server_host + '/home_info?ign=' + ign_temp)
             .then(response => {
                 let map_percentiles = {};
