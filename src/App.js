@@ -6,7 +6,7 @@ import axios from 'axios';
 import './App.scss';
 
 
-const host = 'http://localhost:5000'
+const server_host = process.env.REACT_APP_SERVER_HOST;
 const map_dict = {
     '빌리지 고가의 질주': '01:35:00',
     'WKC 코리아 서킷': '01:45:00',
@@ -25,7 +25,7 @@ const map_levels = {
 }
 
 const tierPoint = 'Tier Point'
-
+const ign_temp = '세야'
 class Home extends Component {
     state = {
         is_loaded: false,
@@ -44,16 +44,18 @@ class Home extends Component {
     }
 
     componentDidMount() {
-        const ign = 'wife'
-        axios.get(host + '/home_info?ign=' + ign)
+        axios.get(server_host + '/home_info?ign=' + ign_temp)
             .then(response => {
-                const map_percentiles = Object.assign(
-                    {}, 
-                    ...Object.keys(response.data.rank_records).map((map_name, idx) => (
-                        {[map_name]: (
-                            Math.round(10000 * response.data.rank_records[map_name] / response.data.num_records[map_name])
-                            / 100).toFixed(2)}
-                    )));
+                let map_percentiles = {};
+                if (!!response.data.rank_records) {
+                    map_percentiles = Object.assign(
+                        {}, 
+                        ...Object.keys(response.data.rank_records).map((map_name, idx) => (
+                            {[map_name]: (
+                                Math.round(10000 * response.data.rank_records[map_name] / response.data.num_records[map_name])
+                                / 100).toFixed(2)}
+                        )));
+                }
                 this.setState({ 
                     is_loaded: true,
                     high_25: response.data.high_25,
@@ -67,7 +69,7 @@ class Home extends Component {
                     map_levels_dict: response.data.map_levels,
                     over_performing_map: response.data.over_performing_map,
                     under_performing_map: response.data.under_performing_map,
-                    ign: ign,
+                    ign: ign_temp,
                 });
             });
     }
@@ -206,7 +208,7 @@ class Maps extends Component {
     }
 
     componentDidMount() {
-        axios.get(host + '/maps?igns=seya')
+        axios.get(server_host + '/maps?igns=' + ign_temp)
             .then(response => {
                 this.setState({ maps_data: response.data[0], is_loaded: true });
             });
@@ -275,8 +277,8 @@ class Maps extends Component {
         if (Object.keys(errors).length === 0 &&
             Object.keys(submit_dict).length > 0 &&
             changed) {
-            axios.post(host + '/maps', {
-                ign: 'seya',
+            axios.post(server_host + '/maps', {
+                ign: ign_temp,
                 maps: submit_dict
             }).then((response) => {
                 window.location.reload();
@@ -366,7 +368,7 @@ class UserRanking extends Component {
     }
 
     componentDidMount() {
-        axios.get(host + '/elo')
+        axios.get(server_host + '/elo')
             .then(response => {
                 const elo_data = response.data
                 const elo_list = [{'rank': '#', 'ign': 'Nickname', 'elo': tierPoint}].concat(elo_data)
@@ -388,7 +390,7 @@ class UserRanking extends Component {
         ) {
             this.setState({ current_tab: map_name });
         } else {
-            axios.get(host + '/maps?map=' + map_name)
+            axios.get(server_host + '/maps?map=' + map_name)
                 .then(response => {
                     const map_list = [{'rank': '#', 'ign': 'Nickname', 'record': 'Record'}].concat(response.data)
                     this.setState({ 
