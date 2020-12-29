@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
+import { BrowserRouter as Router, Route, Link, Switch, Redirect } from "react-router-dom";
 // import { Chart } from "react-google-charts";
 import axios from 'axios';
 // import logo from './premier_league_logo.svg';
@@ -8,7 +8,6 @@ import './App.scss';
 
 const server_host = process.env.REACT_APP_SERVER_HOST;
 const tierPoint = 'Tier Point'
-const ign_temp = '세야'
 const app_name = 'RUSH.GG' // Temporary name
 
 class UserInfo extends Component {
@@ -97,7 +96,6 @@ class UserInfo extends Component {
         if (!is_loaded) {
             return '';
         }
-        console.log(this.state)
         return (
             <div className='user_info_container'>
                 <div className='profile_container'>
@@ -129,7 +127,7 @@ class UserInfo extends Component {
                                 </span>
                                 <span className='performing_span horizontal_child'>
                                     <div>
-                                        <div className='performing_span_header'><h2>하위 50%</h2></div>
+                                        <div className='performing_span_header'><h2>상위 50+%</h2></div>
                                         <ul>
                                             {low_50.map((map_name) =>
                                                 <li key={map_name}>{map_name}</li>
@@ -214,7 +212,56 @@ class UserInfo extends Component {
 
 class Home extends Component {
     render() {
-        return <UserInfo ign={ign_temp} />
+        return (
+            <div className='home_user_search_container home_container'>
+                <div className='search_title'>
+                    <h1>{app_name}</h1>
+                    <h2>카트라이더 러쉬플러스 기록 측정, 유저 전적 검색</h2>
+                </div>
+                <div className='break_column'/>
+                <div className='other_options'>
+                    <input 
+                        type='button'
+                        className='green'
+                        value='실력 측정 시작하기'
+                        onClick={(e) => {
+                            e.preventDefault();
+                            window.location.href = '/sign_up';
+                        }}
+                    />
+                    <div className='break_column'/>
+                    <input 
+                        type='button'
+                        className='green'
+                        value='로그인'
+                        onClick={(e) => {
+                            e.preventDefault();
+                            window.location.href = '/sign_in';
+                        }}
+                    />
+                    <div className='break_column'/>
+                    <input 
+                        type='button'
+                        className='blue'
+                        value='유저 검색'
+                        onClick={(e) => {
+                            e.preventDefault();
+                            window.location.href = '/user';
+                        }}
+                    />
+                    <div className='break_column'/>
+                    <input 
+                        type='button'
+                        className='blue'
+                        value='유저 랭킹'
+                        onClick={(e) => {
+                            e.preventDefault();
+                            window.location.href = '/user_ranking';
+                        }}
+                    />
+                </div>
+            </div>
+        )
     }
 }
 
@@ -256,7 +303,7 @@ class UserSearchForm extends Component {
     handleSubmit(event) {
         event.preventDefault();
         if (!!this.state.search_ign) {
-            window.location.href='/user/' + this.state.search_ign;
+            window.location.href = '/user/' + this.state.search_ign;
         }
     }
 
@@ -266,6 +313,8 @@ class UserSearchForm extends Component {
                 <form onSubmit={this.handleSubmit}>
                     <input
                         type="text"
+                        id='nickname'
+                        name='nickname'
                         placeholder='닉네임 검색'
                         value={this.state.search_ign}
                         onChange={this.handleChange}
@@ -280,7 +329,7 @@ class UserSearchForm extends Component {
 class UserSearch extends Component {
     render() {
         return (
-            <div className='user_search_container'>
+            <div className='home_user_search_container'>
                 <div className='search_title'>
                     <h1>{app_name}</h1>
                     <h2>카트라이더 러쉬플러스 유저 전적 검색</h2>
@@ -299,6 +348,7 @@ class Maps extends Component {
         super(props);
 
         this.state = {
+            my_ign: '',
             maps_data: {},
             changed_maps: {},
             error_maps: {},
@@ -314,11 +364,20 @@ class Maps extends Component {
 
     componentDidMount() {
         this._is_mounted = true;
+        const my_ign = localStorage.getItem('ign');
+        if (!my_ign) {
+            window.location.href = '/';
+            return;
+        }
 
-        axios.get(server_host + '/maps?igns=' + ign_temp)
+        axios.get(server_host + '/maps?igns=' + my_ign)
             .then(response => {
                 if (this._is_mounted) {
-                    this.setState({ maps_data: response.data[0], is_loaded: true });
+                    this.setState({ 
+                        maps_data: response.data[0] || {},
+                        is_loaded: true,
+                        my_ign: my_ign,
+                    });
                 }
             });
     }
@@ -361,14 +420,17 @@ class Maps extends Component {
 
     validateRecord = (record) => (record.length === 8 && record.match(/^[0-5][0-9]:[0-5][0-9]:\d{2}$/));
     validateMinimum(record, minimum) {
-        const recordInt = parseInt(record.slice(0, 2)) * 6000 + parseInt(record.slice(3, 5)) * 100 + parseInt(record.slice(6));
-        const minimumInt = parseInt(minimum.slice(0, 2)) * 6000 + parseInt(minimum.slice(3, 5)) * 100 + parseInt(minimum.slice(6));
+        const recordSplit = record.split(':');
+        const minimumSplit = minimum.split(':');
+        const recordInt = parseInt(recordSplit[0]) * 6000 + parseInt(recordSplit[1]) * 100 + parseInt(recordSplit[2]);
+        const minimumInt = parseInt(minimumSplit[0]) * 6000 + parseInt(minimumSplit[1]) * 100 + parseInt(minimumSplit[2]);
+
         return minimumInt < recordInt;
     };
-    handleSubmit(e) {
+    handleSubmit(e, go_to_my_page=false) {
         e.preventDefault();
 
-        const { changed_maps, map_minimums } = this.state;
+        const { changed_maps, map_minimums, my_ign } = this.state;
         const submit_dict = {};
         const errors = {};
 
@@ -391,10 +453,14 @@ class Maps extends Component {
             Object.keys(submit_dict).length > 0 &&
             changed) {
             axios.post(server_host + '/maps', {
-                ign: ign_temp,
+                ign: my_ign,
                 maps: submit_dict
             }).then((response) => {
-                window.location.reload();
+                if (go_to_my_page) {
+                    window.location.href = '/user/' + my_ign;
+                } else {
+                    window.location.reload();
+                }
             }, (error) => {
                 this.setState({ submit_error: 'Unexpected Error occurred. Please try again.'})
             });
@@ -413,10 +479,13 @@ class Maps extends Component {
             <li key={map_name}>
                 <div className='map_container'>
                     <div>
-                        <p className='map_name'>{map_name}</p>
-                        <div className='break_column'></div>
+                        <p className={map_name in maps_data ? 'map_exists map_name' : 'map_name'}>{map_name}</p>
+                        {/* <div className='break_column'></div> */}
                         <input
-                            className={map_name in error_maps ? 'map_error' : ''}
+                            className={
+                                (map_name in maps_data ? 'map_exists ' : ' ') + 
+                                (map_name in error_maps ? 'map_error' : '')
+                            }
                             key={map_name}
                             name={map_name}
                             type='text'
@@ -425,7 +494,7 @@ class Maps extends Component {
                             onChange={this.handleInputChange}
                         />
                     </div>
-                    <div className='break_column'></div>
+                    {/* <div className='break_column'></div> */}
                     {map_name in error_maps && <p className='map_error'>{error_maps[map_name]}</p>}
                 </div>
             </li>
@@ -433,35 +502,73 @@ class Maps extends Component {
     }
 
     render() {
-        const { submit_error, error_maps, map_levels, is_loaded } = this.state;
-        
+        const { submit_error, error_maps, maps_data, map_levels, is_loaded, my_ign } = this.state;
         const disabled = (Object.keys(error_maps).length !== 0 || !!submit_error)
         const maps_to_check = Object.keys(error_maps).join(', ')
         const maps_error_message = !!maps_to_check ? 'Invalid record: ' + maps_to_check : ''
 
-        if (!is_loaded) return '';
+        const registered_count = Math.max(Object.keys(maps_data).length - 1, 0);
+        const can_continue = (registered_count >= 8);
+
+        if (!is_loaded || !this._is_mounted) return '';
         return (
             <div className='update_maps_container'>
-                <h1>Update Records</h1>
+                <div className='title_div'>
+                    <h1>Update Records</h1>
+                </div>
+                <ul className='records_info_ul'>
+                    <li className={can_continue ? '' : 'red'}><p>- 현재 <strong>{registered_count}</strong>개의 맵을 등록하였습니다. 원활하고 정확한 실력 측정을 위해 <strong>8</strong>개 이상의 맵 기록이 필요합니다.</p></li>
+                    <li className={can_continue ? '' : 'red'}><p>- <strong>8</strong>개 이상의 맵을 성공적으로 저장하면 측정하기 버튼이 활성화됩니다.</p></li>
+                    <li><p>- 등록된 맵의 기록을 갱신할 수 있고 새로운 맵의 기록을 선택하여 추가할 수 있습니다.</p></li>
+                    <li><p>- 성공적으로 등록한 맵은 초록색으로 표시됩니다.</p></li>
+                </ul>
                 <form onSubmit={this.handleSubmit}>
-                    {Object.keys(map_levels).reverse().map((level, idx) =>
-                        <div key={level} className={level + '_level level_container'}>
-                            <h2>{level}</h2>
-                            <ul>
-                                { map_levels[level].map((map_name) => this.renderMapRow(map_name)) }
-                            </ul>
-                        </div>
-                    )}
+                    <div className='update_maps_levels'>
+                        {Object.keys(map_levels).reverse().map((level, idx) =>
+                            <div key={level} className={level + '_level level_container'}>
+                                <h2>{level}</h2>
+                                <ul>
+                                    { map_levels[level].map((map_name) => this.renderMapRow(map_name)) }
+                                </ul>
+                            </div>
+                        )}
+                    </div>
                     <div className='update_maps_submit'>
                         <input 
                             type='button'
-                            value='Cancel'
+                            className='cancel_button'
+                            value='취소'
                             onClick={(e) => {
                                 e.preventDefault();
                                 window.location.href='/user_ranking';
                             }}
                         />
-                        <input type='submit' value='Submit' disabled={disabled} />
+                        <input type='submit' value='저장' disabled={disabled} />
+                        <div className='break_column'></div>
+                        {/* TODO: Add '내 실력 측정하기' button below submit If over 8 maps */}
+                        <div className='save_and_continue_div'>
+                            {!can_continue && <p className='red'>8개 이상의 맵을 성공적으로 저장하면 측정하기 버튼이 활성화됩니다.</p>}
+                            <div className='break_column'></div>
+                            <input 
+                                type='button'
+                                className='save_and_continue_button'
+                                value='저장하고 내 실력 측정하기'
+                                onClick={(e) => {
+                                    this.handleSubmit(e, true);
+                                }}
+                                disabled={disabled || !can_continue} 
+                            />
+                            <input 
+                                type='button'
+                                className='save_and_continue_button'
+                                value='저장하지 않고 내 실력 측정하기'
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    window.location.href = '/user/' + my_ign;
+                                }}
+                                disabled={!can_continue}
+                            />
+                        </div>
                         <div className='break_column'></div>
                         {!!submit_error && <p className='submit_error'>{ submit_error }</p>}
                         {!!maps_error_message && <p className='submit_error'>{ maps_error_message }</p>}
@@ -473,19 +580,40 @@ class Maps extends Component {
 }
 
 class Setting extends Component {
-    state = {
-        is_loaded: false,
+    constructor(props) {
+        super(props);
+        this.state = {
+            is_loaded: false,
+            my_ign: '',
+        }
+
+        this.handleLogout = this.handleLogout.bind(this);
+    }
+
+    componentDidMount() {
+        const my_ign = localStorage.getItem('ign');
+        if (!my_ign) {
+            window.location.href = '/';
+        } else {
+            this.setState({ my_ign: my_ign})
+        }
+    }
+
+    handleLogout() {
+        localStorage.removeItem('ign');
+        window.location.href = '/sign_in';
     }
 
     render() {
+        const { my_ign } = this.state;
         return (
             <div className='my_page_container'>
-                <h1>Welcome, {ign_temp}</h1>
+                <h1>Welcome, {my_ign}</h1>
                 <div className='setting_div'>
                     <ul>
-                        <li key='update_map_records'><a href='/setting/maps'>Update Map Records</a></li>
-                        <li key='view_my_records'><a href={`/user/${ign_temp}`}>View My Records</a></li>
-                        <li key='log_out'>Log Out</li> 
+                        <li key='update_map_records'><p><a href='/setting/maps'>Update Map Records</a></p></li>
+                        <li key='view_my_records'><p><a href={`/user/${my_ign}`}>View My Records</a></p></li>
+                        <li key='log_out' onClick={this.handleLogout}><p className='red'>Log Out</p></li> 
                     </ul>
                 </div>
             </div>
@@ -572,9 +700,10 @@ class UserRanking extends Component {
     }
 
     render() {
-        const { map_data, current_tab, maps_list } = this.state;
+        const { map_data, current_tab, maps_list, is_loaded } = this.state;
         const current_data = map_data[current_tab];
 
+        if (!is_loaded || !this._is_mounted) return '';
         return (
             <div className='user_ranking_container'>
                 <h1>User Ranking by <span className='highlight'>{current_tab}</span></h1>
@@ -606,29 +735,273 @@ class UserRanking extends Component {
     }
 }
 
-class UserLogin extends Component {
-    state = {
-        maps_data: [],
-        is_loaded: false
+// TODO: Change the logic to redirect to my page or home when jwt is saved/available
+class SignIn extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            email: '',
+            password: '',
+            error_msg: '',
+            is_loaded: false,
+        }
+
+        this.handleChangeEmail = this.handleChangeEmail.bind(this);
+        this.handleChangePassword = this.handleChangePassword.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    obtainUsername(username) {
+    componentDidMount() {
+        const my_ign = window.localStorage.getItem('ign');
+        if (!!my_ign) window.location.href = '/setting';
+        else this.setState({ is_loaded: true });
+    }
+
+    handleChangeEmail(event) {
+        this.setState({
+            email: event.target.value,
+            error_msg: ''
+        });
+    }
+
+    handleChangePassword(event) {
+        this.setState({
+            password: event.target.value,
+            error_msg: ''
+        });
+    }
+
+    handleSubmit(event) {
+        event.preventDefault();
+        const { email, password } = this.state;
+
+        if (!email) {
+            this.setState({ 
+                error_msg: 'Email should not be empty'
+            })
+        } else if (!password) {
+            this.setState({ 
+                error_msg: 'Password should not be empty'
+            })
+        } else {
+            axios.post(server_host + '/sign_in', {
+                email: email,
+                password: password,
+            }).then(response => {
+                if (response.data.error) {
+                    this.setState({error_msg: response.data.error});
+                } else {
+                    // TODO: Change this logic to save jwt as well
+                    window.localStorage.setItem('ign', response.data.user.ign);
+                    window.location.href = '/'
+                }
+            });
+        }
     }
 
     render() {
+        if (!this.state.is_loaded) return '';
         return (
-            <article className='user_login'>
-                <div>
-                    <h2>Login to update your records!</h2>
-                    <input type="text" placeholder="ID"></input>
-                    <br></br>
-                    <input type="text" placeholder="Password"></input>
-                    <br></br>
-                    <br></br>
-                    <button type="button">Sign in</button>
+            <div className='sign_in_container'>
+                <h1>{app_name}</h1>
+                <div className='form_div'>
+                    <h4>로그인</h4>
+                    <form onSubmit={this.handleSubmit}>
+                        <input
+                            type="text"
+                            id='email'
+                            name='email'
+                            placeholder='Email'
+                            value={this.state.email}
+                            onChange={this.handleChangeEmail}
+                        />
+                        <div className='break_column'></div>
+                        <input
+                            type="password"
+                            id='password'
+                            name='password'
+                            placeholder='Password'
+                            value={this.state.password}
+                            onChange={this.handleChangePassword}
+                        />
+                        <div className='break_column'></div>
+                        <input className='blue' type="submit" value="로그인" />
+                        <div className='break_column'></div>
+                        <p className='error_msg'>{this.state.error_msg}</p>
+                    </form>
+                    <input
+                        className='green'
+                        type='button'
+                        value='회원가입'
+                        onClick={(e) => {
+                            e.preventDefault();
+                            window.location.href='/sign_up';
+                        }}
+                    />
                 </div>
-            </article>
-        );
+            </div>
+        )
+    }
+}
+
+class SignUp extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            email: '',
+            password: '',
+            password2: '',
+            ign: '',
+            error_msg: '',
+            is_loaded: false,
+        }
+
+        this.handleChangeEmail = this.handleChangeEmail.bind(this);
+        this.handleChangePassword = this.handleChangePassword.bind(this);
+        this.handleChangePassword2 = this.handleChangePassword2.bind(this);
+        this.handleChangeIGN = this.handleChangeIGN.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+    }
+
+    componentDidMount() {
+        const my_ign = window.localStorage.getItem('ign');
+        if (!!my_ign) window.location.href = '/setting';
+        else this.setState({ is_loaded: true });
+    }
+
+    handleChangeEmail(event) {
+        this.setState({
+            email: event.target.value,
+            error_msg: ''
+        });
+    }
+
+    handleChangePassword(event) {
+        this.setState({
+            password: event.target.value,
+            error_msg: ''
+        });
+    }
+
+    handleChangePassword2(event) {
+        this.setState({
+            password2: event.target.value,
+            error_msg: ''
+        });
+    }
+
+    handleChangeIGN(event) {
+        this.setState({
+            ign: event.target.value,
+            error_msg: ''
+        });
+    }
+
+    handleSubmit(event) {
+        event.preventDefault();
+        const { email, password, password2, ign } = this.state;
+
+        if (!email) {
+            this.setState({ 
+                error_msg: 'Email should not be empty'
+            })
+        } else if (!email.match(/\S+@\S+\.\S+/)) {
+            this.setState({ 
+                error_msg: 'Enter a valid email address'
+            })
+        } else if (!password) {
+            this.setState({ 
+                error_msg: 'Password should not be empty'
+            })
+        } else if (!password2) {
+            this.setState({ 
+                error_msg: 'Confirm password should not be empty'
+            })
+        } else if (password !== password2) {
+            this.setState({ 
+                error_msg: 'Password and Confirm password do not match'
+            })
+        } else if (!ign) {
+            this.setState({ 
+                error_msg: 'Nickname should not be empty'
+            })
+        } else {
+            axios.post(server_host + '/sign_up', {
+                email: email,
+                password: password,
+                ign: ign,
+            }).then(response => {
+                if (response.data.error) {
+                    this.setState({error_msg:  response.data.error});
+                } else {
+                    // TODO: Change this logic to save jwt as well
+                    window.localStorage.setItem('ign', response.data.user.ign);
+                    window.location.href = '/setting/maps';
+                }
+            });
+        }
+    }
+
+    render() {
+        if (!this.state.is_loaded) return '';
+        return (
+            <div className='sign_in_container'>
+                <h1>{app_name}</h1>
+                <div className='form_div'>
+                    <h4>회원가입</h4>
+                    <form onSubmit={this.handleSubmit}>
+                        <input
+                            type="text"
+                            id='email'
+                            name='email'
+                            placeholder='Email'
+                            value={this.state.email}
+                            onChange={this.handleChangeEmail}
+                        />
+                        <div className='break_column'></div>
+                        <input
+                            type="password"
+                            id='password'
+                            name='password'
+                            placeholder='Password'
+                            value={this.state.password}
+                            onChange={this.handleChangePassword}
+                        />
+                        <div className='break_column'></div>
+                        <input
+                            type="password"
+                            id='password_verification'
+                            name='password_verification'
+                            placeholder='Confirm password'
+                            value={this.state.password2}
+                            onChange={this.handleChangePassword2}
+                        />
+                        <div className='break_column'></div>
+                        <input
+                            type="text"
+                            id='ign'
+                            name='ign'
+                            placeholder='Nickname (IGN)'
+                            value={this.state.ign}
+                            onChange={this.handleChangeIGN}
+                        />
+                        <div className='break_column'></div>
+                        <input className='blue' type="submit" value="기록 측정 시작하기" />
+                        <div className='break_column'></div>
+                        <p className='error_msg'>{this.state.error_msg}</p>
+                    </form>
+                    <input
+                        className='green'
+                        type='button'
+                        value='기존 계정으로 로그인'
+                        onClick={(e) => {
+                            e.preventDefault();
+                            window.location.href='/sign_in';
+                        }}
+                    />
+                </div>
+            </div>
+        )
     }
 }
 
@@ -662,35 +1035,50 @@ class App extends Component {
             }));
     }
 
+    renderNavigator() {
+        const logged_in = !!localStorage.getItem('ign');
+
+        return (
+            <div className="navigator">
+                <Link to="/">
+                    <span onClick={() => this.handleLinkClick('')} className={ this.getLinkClassName('') }>Home</span>
+                </Link>
+                <Link to="/user_ranking">
+                    <span onClick={() => this.handleLinkClick('user_ranking')} className={ this.getLinkClassName('user_ranking') }>User Ranking</span>
+                </Link>
+                <Link to={"/user"}>
+                    <span onClick={() => this.handleLinkClick('user')} className={ this.getLinkClassName('user') }>Users</span>
+                </Link>
+                <div className='right'>
+                    <UserSearchForm/>
+                    {logged_in
+                        ? 
+                        <div className='log_in_div'>
+                            <Link to="/setting">
+                                <span onClick={() => this.handleLinkClick('setting')} className={ this.getLinkClassName('setting') }>My Account</span>
+                            </Link>
+                        </div>
+                        :
+                        <div className='log_in_div'>
+                            <Link to="/sign_up">
+                                <span onClick={() => this.handleLinkClick('sign_up')} className={ this.getLinkClassName('sign_up') }>Sign Up</span>
+                            </Link>
+                            <Link to="/sign_in">
+                                <span onClick={() => this.handleLinkClick('sign_in')} className={ this.getLinkClassName('sign_in') }>Sign In</span>
+                            </Link>
+                        </div>
+                    }
+                </div>
+            </div>
+        );
+    }
+
     render() {
         return (
             <div>
                 <Router>
                     <div>
-                        <div className="navigator">
-                            <Link to="/">
-                                <span onClick={() => this.handleLinkClick('')} className={ this.getLinkClassName('') }>Home</span>
-                            </Link>
-                            <Link to="/user_ranking">
-                                <span onClick={() => this.handleLinkClick('user_ranking')} className={ this.getLinkClassName('user_ranking') }>User Ranking</span>
-                            </Link>
-                            <Link to={"/user"}>
-                                <span onClick={() => this.handleLinkClick('user')} className={ this.getLinkClassName('user') }>Users</span>
-                            </Link>
-                            <div className='right'>
-                                <UserSearchForm/>
-                                <Link to="/sign_up">
-                                    <span onClick={() => this.handleLinkClick('sign_up')} className={ this.getLinkClassName('sign_up') }>Sign Up</span>
-                                </Link>
-                                <Link to="/sign_in">
-                                    <span onClick={() => this.handleLinkClick('sign_in')} className={ this.getLinkClassName('sign_in') }>Sign In</span>
-                                </Link>
-                                <Link to="/setting">
-                                    <span onClick={() => this.handleLinkClick('setting')} className={ this.getLinkClassName('setting') }>My Account</span>
-                                </Link>
-                            </div>
-                        </div>
-
+                        {this.renderNavigator()}
                         <div className="content">
                             <Switch>
                                 <Route path="/" exact component={Home} />
@@ -699,7 +1087,9 @@ class App extends Component {
                                 <Route path="/user/:ign" component={User} />
                                 <Route path="/setting" exact component={Setting} />
                                 <Route path="/setting/maps" exact component={() => <Maps map_levels={this.state.map_levels} map_minimums={this.state.map_minimums} />} />
-                                <Route path="/sign_in" exact component={UserLogin} />
+                                <Route path="/sign_in" exact component={SignIn} />
+                                <Route path="/sign_up" exact component={SignUp} />
+                                <Redirect to="/" />
                             </Switch>
                         </div>
                     </div>
