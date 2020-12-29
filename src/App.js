@@ -449,6 +449,11 @@ class Maps extends Component {
             }
         });
 
+        if (!changed && Object.keys(errors).length === 0 && go_to_my_page) {
+            window.location.href = '/user/' + my_ign;
+            return;
+        }
+
         if (Object.keys(errors).length === 0 &&
             Object.keys(submit_dict).length > 0 &&
             changed) {
@@ -467,7 +472,7 @@ class Maps extends Component {
         } else {
             this.setState({ 
                 error_maps: errors,
-                submit_error: !changed ? 'Enter a record to submit.' : ''
+                // submit_error: !changed ? 'Enter a record to submit.' : ''
             });
         }
     }
