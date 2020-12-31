@@ -173,7 +173,7 @@ class UserInfo extends Component {
                                                 <span className='horizontal_child map_name'>이름</span>
                                                 <span className='horizontal_child map_level'>난이도</span>
                                                 <span className='horizontal_child map_record'>기록</span>
-                                                <span className='horizontal_child map_rating'>등급</span>
+                                                <span className='horizontal_child map_rating'>등급*</span>
                                                 <span className='horizontal_child map_ranking'>등수</span>
                                             </div>
                                         </li>
@@ -183,11 +183,14 @@ class UserInfo extends Component {
                                                     <span className='horizontal_child map_name'>{map_name}</span>
                                                     <span className='horizontal_child map_level'>{map_levels_dict[map_name]}</span>
                                                     <span className='horizontal_child map_record'>{map_records[map_name]}</span>
-                                                    <span className='horizontal_child map_rating'>{level_records[map_name]}</span>
+                                                    <span className={'horizontal_child map_rating ' + level_records[map_name]}>{level_records[map_name]}</span>
                                                     <span className='horizontal_child map_ranking'>{`${rank_records[map_name]} / ${num_records[map_name]} (${map_percentiles[map_name]}%)`}</span>
                                                 </div>
                                             </li>
                                         )}
+                                    </ul>
+                                    <ul className='help_message'>
+                                        <li>등급*: 맵의 기록에 따라 등급이 스타선수, 랭커, 엘리트, 수준급, L1, 일반 으로 나뉩니다.</li>
                                     </ul>
                                 </span>
                             </div>

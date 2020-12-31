@@ -19,6 +19,7 @@ $kart-black: black;
 $kart-green: #42b72a;
 $kart-green-darker: #369b20;
 $kart-green-darkest: #277217;
+$kart-gold: #e19205;
 
 
 body {
@@ -88,7 +89,7 @@ h1, h2 {
 			}
 
 			li {
-				margin: 8px;
+				margin: 12px;
 			}
 			p {
 				margin: 0;
@@ -102,7 +103,7 @@ h1, h2 {
 				div {
 					&.span_div {
 						border-bottom: 2px solid $kart-white-border;
-						padding: 4px 0;
+						padding-bottom: 10px;
 					}
 				}
 
@@ -110,6 +111,24 @@ h1, h2 {
 					display: inline-block;
 					padding: 10px 0;
 					text-align: center;
+
+					&.map_rating {
+						&.스타선수 {
+							color: $kart-gold;
+							font-weight: 800;
+						}
+						&.랭커 {
+							color: $kart-blue;
+							font-weight: 700;
+						}
+						&.엘리트 {
+							color: $kart-green;
+							font-weight: 600;
+						}
+						&.수준급, &.L1 {
+							font-weight: 600;
+						}
+					}
 				}
 
 				li:first-child {
@@ -123,6 +142,18 @@ h1, h2 {
 						font-weight: bold;
 					}
 				}
+
+				li:last-child {
+					div {
+						border-bottom: none;
+					}
+				}
+			}
+
+			.help_message {
+				border-top: 2px solid $kart-white-border;
+				text-align: left;
+				padding: 8px 0;
 			}
 		}
 	}
