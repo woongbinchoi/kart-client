@@ -106,6 +106,36 @@ class UserInfo extends Component {
                         <div className='performing_container'>
                             <div className='horizontal_parent row_div'>
                                 <span className='performing_span horizontal_child'>
+                                    <div className='performing_span_header'><h2>{ign}님의 기록</h2></div>
+                                    <ul className='user_records'>
+                                        <li key='header'>
+                                            <div className='span_div horizontal_parent'>
+                                                <span className='horizontal_child map_name'>이름</span>
+                                                <span className='horizontal_child map_level'>난이도</span>
+                                                <span className='horizontal_child map_record'>기록</span>
+                                                <span className='horizontal_child map_rating'>등급*</span>
+                                                <span className='horizontal_child map_ranking'>등수</span>
+                                            </div>
+                                        </li>
+                                        {Object.keys(map_records).map((map_name, idx) =>
+                                            <li key={idx}>
+                                                <div className='span_div horizontal_parent'>
+                                                    <span className='horizontal_child map_name'>{map_name}</span>
+                                                    <span className='horizontal_child map_level'>{map_levels_dict[map_name]}</span>
+                                                    <span className='horizontal_child map_record'>{map_records[map_name]}</span>
+                                                    <span className={'horizontal_child map_rating ' + level_records[map_name]}>{level_records[map_name]}</span>
+                                                    <span className='horizontal_child map_ranking'>{`${rank_records[map_name]} / ${num_records[map_name]} (${map_percentiles[map_name]}%)`}</span>
+                                                </div>
+                                            </li>
+                                        )}
+                                    </ul>
+                                    <ul className='help_message'>
+                                        <li>등급*: 맵의 기록에 따라 등급이 스타선수, 랭커, 엘리트, 수준급, L1, 일반 으로 나뉩니다.</li>
+                                    </ul>
+                                </span>
+                            </div>
+                            <div className='horizontal_parent row_div'>
+                                <span className='performing_span horizontal_child'>
                                     <div>
                                         <div className='performing_span_header'><h2>상위 25%</h2></div>
                                         <ul>
@@ -162,36 +192,6 @@ class UserInfo extends Component {
                                             )}
                                         </ul>
                                     </div>
-                                </span>
-                            </div>
-                            <div className='horizontal_parent row_div'>
-                                <span className='performing_span horizontal_child'>
-                                    <div className='performing_span_header'><h2>{ign}님의 기록</h2></div>
-                                    <ul className='user_records'>
-                                        <li key='header'>
-                                            <div className='span_div horizontal_parent'>
-                                                <span className='horizontal_child map_name'>이름</span>
-                                                <span className='horizontal_child map_level'>난이도</span>
-                                                <span className='horizontal_child map_record'>기록</span>
-                                                <span className='horizontal_child map_rating'>등급*</span>
-                                                <span className='horizontal_child map_ranking'>등수</span>
-                                            </div>
-                                        </li>
-                                        {Object.keys(map_records).map((map_name, idx) =>
-                                            <li key={idx}>
-                                                <div className='span_div horizontal_parent'>
-                                                    <span className='horizontal_child map_name'>{map_name}</span>
-                                                    <span className='horizontal_child map_level'>{map_levels_dict[map_name]}</span>
-                                                    <span className='horizontal_child map_record'>{map_records[map_name]}</span>
-                                                    <span className={'horizontal_child map_rating ' + level_records[map_name]}>{level_records[map_name]}</span>
-                                                    <span className='horizontal_child map_ranking'>{`${rank_records[map_name]} / ${num_records[map_name]} (${map_percentiles[map_name]}%)`}</span>
-                                                </div>
-                                            </li>
-                                        )}
-                                    </ul>
-                                    <ul className='help_message'>
-                                        <li>등급*: 맵의 기록에 따라 등급이 스타선수, 랭커, 엘리트, 수준급, L1, 일반 으로 나뉩니다.</li>
-                                    </ul>
                                 </span>
                             </div>
                         </div>
