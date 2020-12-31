@@ -212,6 +212,13 @@ class UserInfo extends Component {
 
 class Home extends Component {
     render() {
+        const my_ign = localStorage.getItem('ign');
+        const value_1 = !!my_ign ? '내 기록 업데이트하기' : '실력 측정 시작하기';
+        const href_1 = !!my_ign ? '/setting/maps' : '/sign_up';
+
+        const value_2 = !!my_ign ? '내 기록 보기' : '로그인';
+        const href_2 = !!my_ign ? '/user/' + my_ign : '/sign_in';
+
         return (
             <div className='home_user_search_container home_container'>
                 <div className='search_title'>
@@ -223,20 +230,20 @@ class Home extends Component {
                     <input 
                         type='button'
                         className='green'
-                        value='실력 측정 시작하기'
+                        value={value_1}
                         onClick={(e) => {
                             e.preventDefault();
-                            window.location.href = '/sign_up';
+                            window.location.href = href_1;
                         }}
                     />
                     <div className='break_column'/>
                     <input 
                         type='button'
                         className='green'
-                        value='로그인'
+                        value={value_2}
                         onClick={(e) => {
                             e.preventDefault();
-                            window.location.href = '/sign_in';
+                            window.location.href = href_2;
                         }}
                     />
                     <div className='break_column'/>
@@ -524,6 +531,7 @@ class Maps extends Component {
                 <ul className='records_info_ul'>
                     <li className={can_continue ? '' : 'red'}><p>- 현재 <strong>{registered_count}</strong>개의 맵을 등록하였습니다. 원활하고 정확한 실력 측정을 위해 <strong>8</strong>개 이상의 맵 기록이 필요합니다.</p></li>
                     <li className={can_continue ? '' : 'red'}><p>- <strong>8</strong>개 이상의 맵을 성공적으로 저장하면 측정하기 버튼이 활성화됩니다.</p></li>
+                    <li><p>- 등록된 맵중 가장 실력이 좋은 맵 8개의 맵이 사용되어 {my_ign}님의 Tier Point를 측정합니다.</p></li>
                     <li><p>- 등록된 맵의 기록을 갱신할 수 있고 새로운 맵의 기록을 선택하여 추가할 수 있습니다.</p></li>
                     <li><p>- 성공적으로 등록한 맵은 초록색으로 표시됩니다.</p></li>
                 </ul>
@@ -533,7 +541,8 @@ class Maps extends Component {
                             <div key={level} className={level + '_level level_container'}>
                                 <h2>{level}</h2>
                                 <ul>
-                                    { map_levels[level].map((map_name) => this.renderMapRow(map_name)) }
+                                    { map_levels[level].filter(mapp => mapp in maps_data).map((map_name) => this.renderMapRow(map_name)) }
+                                    { map_levels[level].filter(mapp => !(mapp in maps_data)).map((map_name) => this.renderMapRow(map_name)) }
                                 </ul>
                             </div>
                         )}

@@ -54,7 +54,7 @@ h1, h2 {
 
 .user_info_container {
 	h1 {
-		margin: 0 0 32px 0;
+		margin: 0 0 16px 0;
 	}
 
 	.not_found_container {
@@ -64,8 +64,10 @@ h1, h2 {
 
 	.profile_container {
 		border-bottom: 2px solid $kart-grey;
+		text-align: center;
+		font-size: 24px;
 	}
-	
+
 	.performing_container {
 		margin: 12px -12px;
 
@@ -76,6 +78,9 @@ h1, h2 {
 		.performing_span {
 			margin: 12px;
 			text-align: center;
+			background-color: $kart-white;
+			border: 1px solid $kart-grey;
+			border-radius: 4px;
 
 			.performing_span_header {
 				border-bottom: 1px solid $kart-grey;
