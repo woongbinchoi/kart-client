@@ -564,6 +564,7 @@ class Maps extends Component {
                         <div className='break_column'></div>
                         {/* TODO: Add '내 실력 측정하기' button below submit If over 8 maps */}
                         <div className='save_and_continue_div'>
+                            {!can_continue && <p className='red'>현재 <strong>{registered_count}</strong>개의 맵을 등록하였습니다.</p>}
                             {!can_continue && <p className='red'>8개 이상의 맵을 성공적으로 저장하면 측정하기 버튼이 활성화됩니다.</p>}
                             <div className='break_column'></div>
                             <input 
