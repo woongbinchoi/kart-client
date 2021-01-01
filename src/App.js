@@ -17,6 +17,7 @@ class UserInfo extends Component {
         is_loaded: false,
         is_user_registered: false,
         is_map_registered: false,
+        map_levels: {},
         high_25: [],
         high_25_50: [],
         low_50: [],
@@ -52,6 +53,7 @@ class UserInfo extends Component {
                             is_loaded: true,
                             is_user_registered: response.data.is_user_registered,
                             is_map_registered: true,
+                            map_levels: this.props.map_levels,
                             high_25: records_data.high_25,
                             high_25_50: records_data.high_25_50,
                             low_50: records_data.low_50,
@@ -79,6 +81,7 @@ class UserInfo extends Component {
             is_loaded,
             is_user_registered,
             is_map_registered,
+            map_levels,
             high_25,
             high_25_50,
             low_50,
@@ -92,6 +95,8 @@ class UserInfo extends Component {
             under_performing_map,
             ign,
         } = this.state;
+
+        console.log(map_levels);
 
         if (!is_loaded) {
             return '';
@@ -108,7 +113,7 @@ class UserInfo extends Component {
                                 <span className='performing_span horizontal_child'>
                                     <div className='performing_span_header'><h2>{ign}님의 기록</h2></div>
                                     <ul className='user_records'>
-                                        <li key='header'>
+                                        <li key='header' className='header'>
                                             <div className='span_div horizontal_parent'>
                                                 <span className='horizontal_child map_name'>이름</span>
                                                 <span className='horizontal_child map_level'>난이도</span>
@@ -192,6 +197,43 @@ class UserInfo extends Component {
                                             )}
                                         </ul>
                                     </div>
+                                </span>
+                            </div>
+                            <div className='horizontal_parent row_div'>
+                                <span className='performing_span horizontal_child'>
+                                    <div className='performing_span_header'><h2>{ign}님의 등급표</h2></div>
+                                    <ul className='user_records user_ratings'>
+                                        <li key='header'>
+                                            <div className='span_div horizontal_parent header'>
+                                                <span className='horizontal_child 난이도'>난이도</span>
+                                                <span className='horizontal_child 이름'>이름</span>
+                                                <span className='horizontal_child 스타선수'>스타선수</span>
+                                                <span className='horizontal_child 랭커'>랭커</span>
+                                                <span className='horizontal_child 엘리트'>엘리트</span>
+                                                <span className='horizontal_child 수준급'>수준급</span>
+                                                <span className='horizontal_child L1'>L1</span>
+                                                <span className='horizontal_child 일반'>일반</span>
+                                            </div>
+                                        </li>
+                                        {Object.keys(map_levels).reverse().map((level, idx) =>
+                                            map_levels[level]
+                                                .filter(map_name => map_name in map_records)
+                                                .map((map_name) =>
+                                                <li key={map_name}>
+                                                    <div className={'span_div horizontal_parent ' + level}>
+                                                        <span className='horizontal_child 난이도'>{level}</span>
+                                                        <span className='horizontal_child 이름'>{map_name}</span>
+                                                        <span className='horizontal_child 스타선수'>{level_records[map_name] === '스타선수' && map_records[map_name]}</span>
+                                                        <span className='horizontal_child 랭커'>{level_records[map_name] === '랭커' && map_records[map_name]}</span>
+                                                        <span className='horizontal_child 엘리트'>{level_records[map_name] === '엘리트' && map_records[map_name]}</span>
+                                                        <span className='horizontal_child 수준급'>{level_records[map_name] === '수준급' && map_records[map_name]}</span>
+                                                        <span className='horizontal_child L1'>{level_records[map_name] === 'L1' && map_records[map_name]}</span>
+                                                        <span className='horizontal_child 일반'>{level_records[map_name] === '일반' && map_records[map_name]}</span>
+                                                    </div>
+                                                </li>
+                                            )
+                                        )}
+                                    </ul>
                                 </span>
                             </div>
                         </div>
@@ -278,17 +320,19 @@ class Home extends Component {
 class User extends Component {
     state = {
         ign: '',
+        map_levels: {},
         is_loaded: false,
     }
     componentDidMount() {
         this.setState({
             ign: this.props.match.params.ign,
+            map_levels: this.props.map_levels,
             is_loaded: true,
         });
     }
     render() {
         if (this.state.is_loaded) {
-            return <UserInfo ign={this.state.ign} />
+            return <UserInfo ign={this.state.ign} map_levels={this.state.map_levels} />
         } else {
             return ''
         }
@@ -1102,7 +1146,7 @@ class App extends Component {
                                 <Route path="/" exact component={Home} />
                                 <Route path="/user_ranking" exact component={() => <UserRanking maps_list={Object.keys(this.state.map_minimums)} />} />
                                 <Route path="/user" exact component={UserSearch} />
-                                <Route path="/user/:ign" component={User} />
+                                <Route path="/user/:ign" component={(props) => <User {...props} map_levels={this.state.map_levels} />} />
                                 <Route path="/setting" exact component={Setting} />
                                 <Route path="/setting/maps" exact component={() => <Maps map_levels={this.state.map_levels} map_minimums={this.state.map_minimums} />} />
                                 <Route path="/sign_in" exact component={SignIn} />
