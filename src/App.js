@@ -8,7 +8,7 @@ import './App.scss';
 
 const server_host = process.env.REACT_APP_SERVER_HOST;
 const tierPoint = 'Tier Point'
-const app_name = 'KARTRUSH.PLUS' // Temporary name
+const app_name = 'Kart Rush +' // Temporary name
 
 class UserInfo extends Component {
     _is_mounted = false;
