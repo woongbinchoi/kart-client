@@ -473,13 +473,13 @@ class Maps extends Component {
     };
 
     validateRecord = (record) => (record.length === 8 && record.match(/^[0-5][0-9]:[0-5][0-9]:\d{2}$/));
-    validateMinimum(record, minimum) {
+    validateMinMax(record, minimum) {
         const recordSplit = record.split(':');
         const minimumSplit = minimum.split(':');
         const recordInt = parseInt(recordSplit[0]) * 6000 + parseInt(recordSplit[1]) * 100 + parseInt(recordSplit[2]);
         const minimumInt = parseInt(minimumSplit[0]) * 6000 + parseInt(minimumSplit[1]) * 100 + parseInt(minimumSplit[2]);
 
-        return minimumInt < recordInt;
+        return minimumInt < recordInt && recordInt < 30000;
     };
     handleSubmit(e, go_to_my_page=false) {
         e.preventDefault();
@@ -495,7 +495,7 @@ class Maps extends Component {
                 changed = true;
                 if (!this.validateRecord(record)) {
                     errors[map_name] = 'Invalid time format. The record should follow \'XX:XX:XX\'. (Ex. 01:42:59)';
-                } else if (!this.validateMinimum(record, map_minimums[map_name])) {
+                } else if (!this.validateMinMax(record, map_minimums[map_name])) {
                     errors[map_name] = 'Enter a valid record.';
                 } else {
                     submit_dict[map_name] = changed_maps[map_name];
