@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { BrowserRouter as Router, Route, Link, Switch, Redirect } from "react-router-dom";
+import ClipLoader from "react-spinners/ClipLoader";
 // import { Chart } from "react-google-charts";
 import axios from 'axios';
 // import logo from './premier_league_logo.svg';
@@ -29,7 +30,7 @@ class UserInfo extends Component {
         map_levels_dict: {},
         over_performing_map: [],
         under_performing_map: [],
-        ign: '',
+        ign: this.props.ign,
     }
 
     componentDidMount() {
@@ -96,18 +97,14 @@ class UserInfo extends Component {
             ign,
         } = this.state;
 
-        console.log(map_levels);
-
-        if (!is_loaded) {
-            return '';
-        }
         return (
             <div className='user_info_container'>
                 <div className='profile_container'>
                     <h1>{ign}</h1>
                 </div>
                 <div className='records_container'>
-                    {is_user_registered && is_map_registered &&
+                    {!is_loaded && <Loading/>}
+                    {is_loaded && is_user_registered && is_map_registered &&
                         <div className='performing_container'>
                             <div className='horizontal_parent row_div'>
                                 <span className='performing_span horizontal_child'>
@@ -238,12 +235,12 @@ class UserInfo extends Component {
                             </div>
                         </div>
                     }
-                    {is_user_registered && !is_map_registered &&
+                    {is_loaded && is_user_registered && !is_map_registered &&
                         <div className='not_found_container'>
                             <h2>맵 기록이 등록되지 않은 유저입니다.</h2>
                         </div>
                     }
-                    {!is_user_registered &&
+                    {is_loaded && !is_user_registered &&
                         <div className='not_found_container'>
                             <h2>{app_name} 에 등록되지 않은 유저입니다.</h2>
                             <h3>오타를 확인 후 다시 검색해주세요.</h3>
@@ -317,25 +314,26 @@ class Home extends Component {
     }
 }
 
-class User extends Component {
+class Loading extends Component {
     state = {
-        ign: '',
-        map_levels: {},
-        is_loaded: false,
-    }
-    componentDidMount() {
-        this.setState({
-            ign: this.props.match.params.ign,
-            map_levels: this.props.map_levels,
-            is_loaded: true,
-        });
+        override: `
+            display: block;
+            margin: 0 auto;
+        `,
     }
     render() {
-        if (this.state.is_loaded) {
-            return <UserInfo ign={this.state.ign} map_levels={this.state.map_levels} />
-        } else {
-            return ''
-        }
+        return (
+            <div className='loading_container'>
+                <h2>Loading...</h2>
+                <ClipLoader color={'#005fcc'} css={this.state.override} size={40} />
+            </div>
+        );
+    }
+}
+
+class User extends Component {
+    render() {
+        return <UserInfo ign={this.props.match.params.ign} map_levels={this.props.map_levels} />
     }
 }
 
@@ -407,8 +405,8 @@ class Maps extends Component {
             changed_maps: {},
             error_maps: {},
             submit_error: '',
-            map_minimums: props.map_minimums,
-            map_levels: props.map_levels,
+            map_minimums: {},
+            map_levels: {},
             is_loaded: false
         }
 
@@ -427,7 +425,9 @@ class Maps extends Component {
         axios.get(server_host + '/maps?igns=' + my_ign)
             .then(response => {
                 if (this._is_mounted) {
-                    this.setState({ 
+                    this.setState({
+                        map_minimums: this.props.map_minimums,
+                        map_levels: this.props.map_levels,
                         maps_data: response.data[0] || {},
                         is_loaded: true,
                         my_ign: my_ign,
@@ -569,73 +569,77 @@ class Maps extends Component {
         const registered_count = Math.max(Object.keys(maps_data).length - 1, 0);
         const can_continue = (registered_count >= 8);
 
-        if (!is_loaded || !this._is_mounted) return '';
+        if (!this._is_mounted) return '';
         return (
             <div className='update_maps_container'>
                 <div className='title_div'>
                     <h1>Update Records</h1>
                 </div>
-                <ul className='records_info_ul'>
-                    <li className={can_continue ? '' : 'red'}><p>- 현재 <strong>{registered_count}</strong>개의 맵을 등록하였습니다. 원활하고 정확한 실력 측정을 위해 <strong>8</strong>개 이상의 맵 기록이 필요합니다.</p></li>
-                    <li className={can_continue ? '' : 'red'}><p>- <strong>8</strong>개 이상의 맵을 성공적으로 저장하면 측정하기 버튼이 활성화됩니다.</p></li>
-                    <li><p>- 등록된 맵중 가장 실력이 좋은 맵 8개의 맵이 사용되어 {my_ign}님의 Tier Point를 측정합니다.</p></li>
-                    <li><p>- 등록된 맵의 기록을 갱신할 수 있고 새로운 맵의 기록을 선택하여 추가할 수 있습니다.</p></li>
-                    <li><p>- 성공적으로 등록한 맵은 초록색으로 표시됩니다.</p></li>
-                </ul>
-                <form onSubmit={this.handleSubmit}>
-                    <div className='update_maps_levels'>
-                        {Object.keys(map_levels).reverse().map((level, idx) =>
-                            <div key={level} className={level + '_level level_container'}>
-                                <h2>{level}</h2>
-                                <ul>
-                                    { map_levels[level].filter(mapp => mapp in maps_data).map((map_name) => this.renderMapRow(map_name)) }
-                                    { map_levels[level].filter(mapp => !(mapp in maps_data)).map((map_name) => this.renderMapRow(map_name)) }
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                    <div className='update_maps_submit'>
-                        <input 
-                            type='button'
-                            className='cancel_button'
-                            value='취소'
-                            onClick={(e) => {
-                                e.preventDefault();
-                                window.location.href='/user_ranking';
-                            }}
-                        />
-                        <input type='submit' value='저장' disabled={disabled} />
-                        <div className='break_column'></div>
-                        {/* TODO: Add '내 실력 측정하기' button below submit If over 8 maps */}
-                        <div className='save_and_continue_div'>
-                            {!can_continue && <p className='red'>현재 <strong>{registered_count}</strong>개의 맵을 등록하였습니다.</p>}
-                            {!can_continue && <p className='red'>8개 이상의 맵을 성공적으로 저장하면 측정하기 버튼이 활성화됩니다.</p>}
-                            <div className='break_column'></div>
+                {!is_loaded && <Loading/>}
+                {is_loaded &&
+                <>
+                    <ul className='records_info_ul'>
+                        <li className={can_continue ? '' : 'red'}><p>- 현재 <strong>{registered_count}</strong>개의 맵을 등록하였습니다. 원활하고 정확한 실력 측정을 위해 <strong>8</strong>개 이상의 맵 기록이 필요합니다.</p></li>
+                        <li className={can_continue ? '' : 'red'}><p>- <strong>8</strong>개 이상의 맵을 성공적으로 저장하면 측정하기 버튼이 활성화됩니다.</p></li>
+                        <li><p>- 등록된 맵중 가장 실력이 좋은 맵 8개의 맵이 사용되어 {my_ign}님의 Tier Point를 측정합니다.</p></li>
+                        <li><p>- 등록된 맵의 기록을 갱신할 수 있고 새로운 맵의 기록을 선택하여 추가할 수 있습니다.</p></li>
+                        <li><p>- 성공적으로 등록한 맵은 초록색으로 표시됩니다.</p></li>
+                    </ul>
+                    <form onSubmit={this.handleSubmit}>
+                        <div className='update_maps_levels'>
+                            {Object.keys(map_levels).reverse().map((level, idx) =>
+                                <div key={level} className={level + '_level level_container'}>
+                                    <h2>{level}</h2>
+                                    <ul>
+                                        { map_levels[level].filter(mapp => mapp in maps_data).map((map_name) => this.renderMapRow(map_name)) }
+                                        { map_levels[level].filter(mapp => !(mapp in maps_data)).map((map_name) => this.renderMapRow(map_name)) }
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                        <div className='update_maps_submit'>
                             <input 
                                 type='button'
-                                className='save_and_continue_button'
-                                value='저장하고 내 실력 측정하기'
-                                onClick={(e) => {
-                                    this.handleSubmit(e, true);
-                                }}
-                                disabled={disabled || !can_continue} 
-                            />
-                            <input 
-                                type='button'
-                                className='save_and_continue_button'
-                                value='저장하지 않고 내 실력 측정하기'
+                                className='cancel_button'
+                                value='취소'
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    window.location.href = '/user/' + my_ign;
+                                    window.location.href='/user_ranking';
                                 }}
-                                disabled={!can_continue}
                             />
+                            <input type='submit' value='저장' disabled={disabled} />
+                            <div className='break_column'></div>
+                            {/* TODO: Add '내 실력 측정하기' button below submit If over 8 maps */}
+                            <div className='save_and_continue_div'>
+                                {!can_continue && <p className='red'>현재 <strong>{registered_count}</strong>개의 맵을 등록하였습니다.</p>}
+                                {!can_continue && <p className='red'>8개 이상의 맵을 성공적으로 저장하면 측정하기 버튼이 활성화됩니다.</p>}
+                                <div className='break_column'></div>
+                                <input 
+                                    type='button'
+                                    className='save_and_continue_button'
+                                    value='저장하고 내 실력 측정하기'
+                                    onClick={(e) => {
+                                        this.handleSubmit(e, true);
+                                    }}
+                                    disabled={disabled || !can_continue} 
+                                />
+                                <input 
+                                    type='button'
+                                    className='save_and_continue_button'
+                                    value='저장하지 않고 내 실력 측정하기'
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.location.href = '/user/' + my_ign;
+                                    }}
+                                    disabled={!can_continue}
+                                />
+                            </div>
+                            <div className='break_column'></div>
+                            {!!submit_error && <p className='submit_error'>{ submit_error }</p>}
+                            {!!maps_error_message && <p className='submit_error'>{ maps_error_message }</p>}
                         </div>
-                        <div className='break_column'></div>
-                        {!!submit_error && <p className='submit_error'>{ submit_error }</p>}
-                        {!!maps_error_message && <p className='submit_error'>{ maps_error_message }</p>}
-                    </div>
-                </form>
+                    </form>
+                </>}
             </div>
         );
     }
@@ -765,33 +769,36 @@ class UserRanking extends Component {
         const { map_data, current_tab, maps_list, is_loaded } = this.state;
         const current_data = map_data[current_tab];
 
-        if (!is_loaded || !this._is_mounted) return '';
+        if (!this._is_mounted) return '';
         return (
             <div className='user_ranking_container'>
                 <h1>User Ranking by <span className='highlight'>{current_tab}</span></h1>
-                <div className='user_ranking_content horizontal_parent'>
-                    <span className='user_ranking_search'>
-                        <ul className='user_ranking'>
-                            {maps_list.map((map_name) =>
-                                this.renderSideBar(map_name)
-                            )}
-                        </ul>
-                    </span>
-                    <span className='user_ranking_records'>
-                        <ul className='user_ranking'>
-                            <li key='header'>
-                                <div className='span_div'>
-                                    <span className='rank'>#</span>
-                                    <span className='ign'>Nickname</span>
-                                    <span className='elo'>{current_tab === tierPoint ? tierPoint : 'Record'}</span>
-                                </div>
-                            </li>
-                            {current_data.map((user_record) =>
-                                this.renderRecord(user_record)
-                            )}
-                        </ul>
-                    </span>
-                </div>
+                {!is_loaded && <Loading/>}
+                {is_loaded && 
+                    <div className='user_ranking_content horizontal_parent'>
+                        <span className='user_ranking_search'>
+                            <ul className='user_ranking'>
+                                {maps_list.map((map_name) =>
+                                    this.renderSideBar(map_name)
+                                )}
+                            </ul>
+                        </span>
+                        <span className='user_ranking_records'>
+                            <ul className='user_ranking'>
+                                <li key='header'>
+                                    <div className='span_div'>
+                                        <span className='rank'>#</span>
+                                        <span className='ign'>Nickname</span>
+                                        <span className='elo'>{current_tab === tierPoint ? tierPoint : 'Record'}</span>
+                                    </div>
+                                </li>
+                                {current_data.map((user_record) =>
+                                    this.renderRecord(user_record)
+                                )}
+                            </ul>
+                        </span>
+                    </div>
+                }
             </div>
         );
     }

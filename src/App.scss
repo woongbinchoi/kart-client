@@ -225,53 +225,6 @@ h1, h2 {
 						font-weight: 600;
 					}
 				}
-
-				// span {
-				// 	display: inline-block;
-				// 	padding: 16px 0;
-				// 	text-align: center;
-				// 	border-left: 1px solid $kart-grey;
-
-				// 	&.이름 {
-				// 		border-left: none;
-				// 	}
-
-				// 	&.map_rating {
-				// 		&.스타선수 {
-				// 			color: $kart-gold;
-				// 			font-weight: 800;
-				// 		}
-						// &.랭커 {
-						// 	color: $kart-blue;
-						// 	font-weight: 700;
-						// }
-						// &.엘리트 {
-						// 	color: $kart-green;
-						// 	font-weight: 600;
-						// }
-						// &.수준급, &.L1 {
-						// 	font-weight: 600;
-						// }
-				// 	}
-				// }
-
-				// li:first-child {
-				// 	div {
-				// 		padding-top: 5px;
-				// 		border-bottom: 1px solid $kart-blue;
-				// 	}
-		
-				// 	span {
-				// 		color: $kart-blue;
-				// 		font-weight: bold;
-				// 	}
-				// }
-
-				// li:last-child {
-				// 	div {
-				// 		border-bottom: none;
-				// 	}
-				// }
 			}
 
 			.help_message {
@@ -324,7 +277,6 @@ h1, h2 {
 	}
 
 	.update_maps_levels {
-		// width: 100%;
 		display: inline-block;
 		border: 1px solid $kart-grey;
 		border-radius: 8px;
@@ -332,28 +284,17 @@ h1, h2 {
 	}
 
 	.level_container {
-		// display: inline-block;
-		// vertical-align: top;
 		display: table-cell;
 		padding: 24px;
 		margin-bottom: 24px;
 		border-left: 1px solid $kart-grey;
-		// border-radius: 8px;
 		&:first-child {
 			border-left: none;
 		}
 	}
 
 	.map_container {
-		// display: flex;
-		// flex-wrap: wrap;
-		// justify-content: center;
 		margin-bottom: 32px;
-
-		// .break_column {
-		// 	flex-basis: 100%;
-		// 	width: 0;
-		// }
 		
 		input.map_exists {
 			border-color: $kart-green;
@@ -729,6 +670,14 @@ h1, h2 {
 	.break_column {
 		flex-basis: 100%;
 		width: 0;
+	}
+}
+
+.loading_container {
+	h2 {
+		color: $kart-blue;
+		margin: 2%;
+		text-align: center;
 	}
 }
 
