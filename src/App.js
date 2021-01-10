@@ -314,6 +314,8 @@ class Home extends Component {
     }
 }
 
+// NOTE: Used https://www.npmjs.com/package/react-spinners
+//       Demo: https://www.davidhu.io/react-spinners/
 class Loading extends Component {
     state = {
         override: `
@@ -691,10 +693,8 @@ class UserRanking extends Component {
     _is_mounted = false;
 
     state = {
-        maps_list: [tierPoint].concat(this.props.maps_list),
-        map_data: {
-            [tierPoint]: [],
-        },
+        maps_list: [],
+        map_data: {},
         is_loaded: false,
         current_tab: tierPoint,
     }
@@ -706,6 +706,7 @@ class UserRanking extends Component {
             .then(response => {
                 if (this._is_mounted) {
                     this.setState({ 
+                        maps_list: [tierPoint].concat(this.props.maps_list),
                         map_data: {
                             ...this.state.map_data, [tierPoint]: response.data
                         },
