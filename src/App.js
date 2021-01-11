@@ -30,19 +30,24 @@ class UserInfo extends Component {
         map_levels_dict: {},
         over_performing_map: [],
         under_performing_map: [],
-        ign: this.props.ign,
+        ign: this.props.match.params.ign,
     }
 
     componentDidMount() {
         this._is_mounted = true;
-        const ign = this.props.ign;
 
-        axios.get(server_host + '/user_info?ign=' + ign)
-            .then(response => {
+        const ign = this.state.ign;
+        const request_map_levels = axios.get(server_host + '/map_levels');
+        const request_user_info = axios.get(server_host + '/user_info?ign=' + ign);
+
+        axios.all([request_map_levels, request_user_info])
+            .then(axios.spread((...responses) => {
                 if (this._is_mounted) {
-                    const records_data = response.data.records_data;
+                    const map_levels_data = responses[0].data;
+                    const user_info_data = responses[1].data;
+                    const records_data = user_info_data.records_data;
                     if (Object.keys(records_data).length === 0) {
-                        this.setState({ is_loaded: true, is_user_registered: response.data.is_user_registered, is_map_registered: false })
+                        this.setState({ is_loaded: true, is_user_registered: user_info_data.is_user_registered, is_map_registered: false })
                     } else {
                         let map_percentiles = {}
                         for (let map_name in records_data.rank_records) {
@@ -52,9 +57,9 @@ class UserInfo extends Component {
                         }
                         this.setState({
                             is_loaded: true,
-                            is_user_registered: response.data.is_user_registered,
+                            is_user_registered: user_info_data.is_user_registered,
                             is_map_registered: true,
-                            map_levels: this.props.map_levels,
+                            map_levels: map_levels_data,
                             high_25: records_data.high_25,
                             high_25_50: records_data.high_25_50,
                             low_50: records_data.low_50,
@@ -70,7 +75,7 @@ class UserInfo extends Component {
                         });
                     }
                 }
-            });
+            }));
     }
 
     componentWillUnmount() {
@@ -333,11 +338,11 @@ class Loading extends Component {
     }
 }
 
-class User extends Component {
-    render() {
-        return <UserInfo ign={this.props.match.params.ign} map_levels={this.props.map_levels} />
-    }
-}
+// class User extends Component {
+//     render() {
+//         return <UserInfo ign={this.props.match.params.ign} />
+//     }
+// }
 
 class UserSearchForm extends Component {
     constructor(props) {
@@ -424,18 +429,22 @@ class Maps extends Component {
             return;
         }
 
-        axios.get(server_host + '/maps?igns=' + my_ign)
-            .then(response => {
+        const request_map_levels = axios.get(server_host + '/map_levels');
+        const request_map_minimums = axios.get(server_host + '/map_minimums');
+        const request_maps_data = axios.get(server_host + '/maps?igns=' + my_ign);
+
+        axios.all([request_map_levels, request_map_minimums, request_maps_data])
+            .then(axios.spread((...responses) => {
                 if (this._is_mounted) {
                     this.setState({
-                        map_minimums: this.props.map_minimums,
-                        map_levels: this.props.map_levels,
-                        maps_data: response.data[0] || {},
+                        map_levels: responses[0].data,
+                        map_minimums: responses[1].data,
+                        maps_data: responses[2].data[0] || {},
                         is_loaded: true,
                         my_ign: my_ign,
                     });
                 }
-            });
+            }));
     }
 
     componentWillUnmount() {
@@ -541,7 +550,6 @@ class Maps extends Component {
                 <div className='map_container'>
                     <div>
                         <p className={map_name in maps_data ? 'map_exists map_name' : 'map_name'}>{map_name}</p>
-                        {/* <div className='break_column'></div> */}
                         <input
                             className={
                                 (map_name in maps_data ? 'map_exists ' : ' ') + 
@@ -555,7 +563,6 @@ class Maps extends Component {
                             onChange={this.handleInputChange}
                         />
                     </div>
-                    {/* <div className='break_column'></div> */}
                     {map_name in error_maps && <p className='map_error'>{error_maps[map_name]}</p>}
                 </div>
             </li>
@@ -571,7 +578,6 @@ class Maps extends Component {
         const registered_count = Math.max(Object.keys(maps_data).length - 1, 0);
         const can_continue = (registered_count >= 8);
 
-        if (!this._is_mounted) return '';
         return (
             <div className='update_maps_container'>
                 <div className='title_div'>
@@ -702,19 +708,24 @@ class UserRanking extends Component {
     componentDidMount() {
         this._is_mounted = true;
 
-        axios.get(server_host + '/elo')
-            .then(response => {
+        const request_map_minimums = axios.get(server_host + '/map_minimums');
+        const request_elo = axios.get(server_host + '/elo');
+        
+        axios.all([request_map_minimums, request_elo])
+            .then(axios.spread((...responses) => {
                 if (this._is_mounted) {
                     this.setState({ 
-                        maps_list: [tierPoint].concat(this.props.maps_list),
+                        maps_list: [tierPoint].concat(
+                            Object.keys(responses[0].data)
+                        ),
                         map_data: {
-                            ...this.state.map_data, [tierPoint]: response.data
+                            [tierPoint]: responses[1].data
                         },
                         is_loaded: true,
                         current_tab: tierPoint
                     });
                 }
-            });
+            }));
     }
 
     componentWillUnmount() {
@@ -770,7 +781,6 @@ class UserRanking extends Component {
         const { map_data, current_tab, maps_list, is_loaded } = this.state;
         const current_data = map_data[current_tab];
 
-        if (!this._is_mounted) return '';
         return (
             <div className='user_ranking_container'>
                 <h1>User Ranking by <span className='highlight'>{current_tab}</span></h1>
@@ -1077,9 +1087,7 @@ class SignUp extends Component {
 
 class App extends Component {
     state = {
-        current_page: null,
-        map_levels: {},
-        map_minimums: {},
+        current_page: null
     }
 
     handleLinkClick(path) {
@@ -1092,17 +1100,7 @@ class App extends Component {
 
     componentDidMount() {
         const pathname = window.location.pathname.split('/');
-        const request_map_levels = axios.get(server_host + '/map_levels');
-        const request_map_minimums = axios.get(server_host + '/map_minimums');
-
-        axios.all([request_map_levels, request_map_minimums])
-            .then(axios.spread((...responses) => {
-                this.setState({
-                    current_page: pathname[1],
-                    map_levels: responses[0].data,
-                    map_minimums: responses[1].data,
-                });
-            }));
+        this.setState({ current_page: pathname[1] });
     }
 
     renderNavigator() {
@@ -1152,11 +1150,11 @@ class App extends Component {
                         <div className="content">
                             <Switch>
                                 <Route path="/" exact component={Home} />
-                                <Route path="/user_ranking" exact component={() => <UserRanking maps_list={Object.keys(this.state.map_minimums)} />} />
+                                <Route path="/user_ranking" exact component={UserRanking} />
                                 <Route path="/user" exact component={UserSearch} />
-                                <Route path="/user/:ign" component={(props) => <User {...props} map_levels={this.state.map_levels} />} />
+                                <Route path="/user/:ign" render={(props) => <UserInfo {...props} />} />
                                 <Route path="/setting" exact component={Setting} />
-                                <Route path="/setting/maps" exact component={() => <Maps map_levels={this.state.map_levels} map_minimums={this.state.map_minimums} />} />
+                                <Route path="/setting/maps" exact component={Maps} />
                                 <Route path="/sign_in" exact component={SignIn} />
                                 <Route path="/sign_up" exact component={SignUp} />
                                 <Redirect to="/" />
