@@ -875,6 +875,8 @@ class SignIn extends Component {
                     window.localStorage.setItem('ign', response.data.user.ign);
                     window.location.href = '/'
                 }
+            }).catch(error => {
+                this.setState({error_msg: 'Unexpected error from the server. Please try again.'});
             });
         }
     }
