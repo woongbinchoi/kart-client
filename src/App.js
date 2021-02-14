@@ -457,13 +457,11 @@ class Maps extends Component {
         const currVal = curr.replace(/[^\d]/g, '').replace(/\s/g, '');
         const currLen = currVal.length;
 
-        if (!prev || prev.length < curr.length) {
-            if (!prev && !currVal) return '';
-            if (currLen < 3) return this.formatTime(currVal);
-            if (currLen < 5) return `${this.formatTime(currVal.slice(0, 2))}:${this.formatTime(currVal.slice(2))}`;
-            return `${this.formatTime(currVal.slice(0, 2))}:${this.formatTime(currVal.slice(2, 4))}:${currVal.slice(4, 6)}`;
-        }
-        return '';
+        if (!prev && !currVal) return '';
+        else if (currLen < 3) return this.formatTime(currVal);
+        else if (currLen < 5) return `${this.formatTime(currVal.slice(0, 2))}:${this.formatTime(currVal.slice(2))}`;
+        else if (currLen < 7) return `${this.formatTime(currVal.slice(0, 2))}:${this.formatTime(currVal.slice(2, 4))}:${currVal.slice(4, 6)}`;
+        else return prev;
         
     };
     handleInputChange({ target: { name, value } }) {
