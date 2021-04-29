@@ -1,15 +1,64 @@
+import axios from 'axios';
 import React, { Component } from "react";
 import { BrowserRouter as Router, Route, Link, Switch, Redirect } from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
-// import { Chart } from "react-google-charts";
-import axios from 'axios';
-// import logo from './premier_league_logo.svg';
+
 import './App.scss';
+import LocalStorageService from './services/LocalStorageService.js'
 
 
 const server_host = process.env.REACT_APP_SERVER_HOST;
 const tierPoint = 'Tier Point'
-const app_name = 'Kart Rush +' // Temporary name
+const app_name = 'Kart Rush +'
+
+// Default Host
+axios.defaults.baseURL = server_host;
+
+// Add a request interceptor
+axios.interceptors.request.use(
+    config => {
+        const accessToken = LocalStorageService.getAccessToken();
+        const refreshToken = LocalStorageService.getRefreshToken();
+        if (accessToken && refreshToken) {
+            if (config.url === '/refresh') {
+                config.headers['Authorization'] = 'Bearer ' + refreshToken;
+            } else {
+                config.headers['Authorization'] = 'Bearer ' + accessToken;
+            }
+        }
+        return config;
+    },
+    error => {
+        Promise.reject(error)
+    }
+);
+
+// Add a response interceptor
+axios.interceptors.response.use((response) => {
+    return response
+ }, function (error) {
+    const originalRequest = error.config;
+
+    // Go to log in page if refresh failed
+    if (originalRequest.url === '/refresh' && (!error.response || error.response.status === 401)) {
+        LocalStorageService.setUserLogOut();
+        window.location.href = '/sign_in';
+        return Promise.reject(error);
+    }
+
+    // Retry when access token is expired
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        return axios.post('/refresh')
+            .then(res => {
+                if (res.status === 200) {
+                    LocalStorageService.setAccessToken(res.data.access_token);
+                    return axios(originalRequest);
+                }
+            });
+    }
+    return Promise.reject(error);
+ });
 
 class UserInfo extends Component {
     _is_mounted = false;
@@ -37,8 +86,8 @@ class UserInfo extends Component {
         this._is_mounted = true;
 
         const ign = this.state.ign;
-        const request_map_levels = axios.get(server_host + '/map_levels');
-        const request_user_info = axios.get(server_host + '/user_info?ign=' + ign);
+        const request_map_levels = axios.get('/map_levels');
+        const request_user_info = axios.get('/user_info?ign=' + ign);
 
         axios.all([request_map_levels, request_user_info])
             .then(axios.spread((...responses) => {
@@ -259,12 +308,12 @@ class UserInfo extends Component {
 
 class Home extends Component {
     render() {
-        const my_ign = localStorage.getItem('ign');
-        const value_1 = !!my_ign ? '내 기록 업데이트하기' : '실력 측정 시작하기';
-        const href_1 = !!my_ign ? '/setting/maps' : '/sign_up';
+        const my_ign = LocalStorageService.checkLogInAndGetIGN();
+        const value_1 = my_ign ? '내 기록 업데이트하기' : '실력 측정 시작하기';
+        const href_1 = my_ign ? '/setting/maps' : '/sign_up';
 
-        const value_2 = !!my_ign ? '내 기록 보기' : '로그인';
-        const href_2 = !!my_ign ? '/user/' + my_ign : '/sign_in';
+        const value_2 = my_ign ? '내 기록 보기' : '로그인';
+        const href_2 = my_ign ? '/user/' + my_ign : '/sign_in';
 
         return (
             <div className='home_user_search_container home_container'>
@@ -423,15 +472,15 @@ class Maps extends Component {
 
     componentDidMount() {
         this._is_mounted = true;
-        const my_ign = localStorage.getItem('ign');
+        const my_ign = LocalStorageService.checkLogInAndGetIGN();
         if (!my_ign) {
             window.location.href = '/';
             return;
         }
 
-        const request_map_levels = axios.get(server_host + '/map_levels');
-        const request_map_minimums = axios.get(server_host + '/map_minimums');
-        const request_maps_data = axios.get(server_host + '/maps?igns=' + my_ign);
+        const request_map_levels = axios.get('/map_levels');
+        const request_map_minimums = axios.get('/map_minimums');
+        const request_maps_data = axios.get('/maps?igns=' + my_ign);
 
         axios.all([request_map_levels, request_map_minimums, request_maps_data])
             .then(axios.spread((...responses) => {
@@ -520,7 +569,7 @@ class Maps extends Component {
         if (Object.keys(errors).length === 0 &&
             Object.keys(submit_dict).length > 0 &&
             changed) {
-            axios.post(server_host + '/maps', {
+            axios.post('/maps', {
                 ign: my_ign,
                 maps: submit_dict
             }).then((response) => {
@@ -663,7 +712,7 @@ class Setting extends Component {
     }
 
     componentDidMount() {
-        const my_ign = localStorage.getItem('ign');
+        const my_ign = LocalStorageService.checkLogInAndGetIGN();
         if (!my_ign) {
             window.location.href = '/';
         } else {
@@ -672,7 +721,7 @@ class Setting extends Component {
     }
 
     handleLogout() {
-        localStorage.removeItem('ign');
+        LocalStorageService.setUserLogOut();
         window.location.href = '/sign_in';
     }
 
@@ -706,8 +755,8 @@ class UserRanking extends Component {
     componentDidMount() {
         this._is_mounted = true;
 
-        const request_map_minimums = axios.get(server_host + '/map_minimums');
-        const request_elo = axios.get(server_host + '/elo');
+        const request_map_minimums = axios.get('/map_minimums');
+        const request_elo = axios.get('/elo');
         
         axios.all([request_map_minimums, request_elo])
             .then(axios.spread((...responses) => {
@@ -738,7 +787,7 @@ class UserRanking extends Component {
         ) {
             this.setState({ current_tab: map_name });
         } else {
-            axios.get(server_host + '/maps?map=' + map_name)
+            axios.get('/maps?map=' + map_name)
                 .then(response => {
                     this.setState({ 
                         map_data: {
@@ -830,8 +879,8 @@ class SignIn extends Component {
     }
 
     componentDidMount() {
-        const my_ign = window.localStorage.getItem('ign');
-        if (!!my_ign) window.location.href = '/setting';
+        const isLoggedIn = LocalStorageService.checkLogInAndGetIGN();
+        if (isLoggedIn) window.location.href = '/setting';
         else this.setState({ is_loaded: true });
     }
 
@@ -862,15 +911,14 @@ class SignIn extends Component {
                 error_msg: 'Password should not be empty'
             })
         } else {
-            axios.post(server_host + '/sign_in', {
+            axios.post('/sign_in', {
                 email: email,
                 password: password,
             }).then(response => {
                 if (response.data.error) {
                     this.setState({error_msg: response.data.error});
                 } else {
-                    // TODO: Change this logic to save jwt as well
-                    window.localStorage.setItem('ign', response.data.user.ign);
+                    LocalStorageService.setUserLogIn(response.data.user);
                     window.location.href = '/'
                 }
             }).catch(error => {
@@ -944,8 +992,8 @@ class SignUp extends Component {
     }
 
     componentDidMount() {
-        const my_ign = window.localStorage.getItem('ign');
-        if (!!my_ign) window.location.href = '/setting';
+        const isLoggedIn = LocalStorageService.checkLogInAndGetIGN();
+        if (isLoggedIn) window.location.href = '/setting';
         else this.setState({ is_loaded: true });
     }
 
@@ -1006,7 +1054,7 @@ class SignUp extends Component {
                 error_msg: 'Nickname should not be empty'
             })
         } else {
-            axios.post(server_host + '/sign_up', {
+            axios.post('/sign_up', {
                 email: email,
                 password: password,
                 ign: ign,
@@ -1014,8 +1062,7 @@ class SignUp extends Component {
                 if (response.data.error) {
                     this.setState({error_msg:  response.data.error});
                 } else {
-                    // TODO: Change this logic to save jwt as well
-                    window.localStorage.setItem('ign', response.data.user.ign);
+                    LocalStorageService.setUserLogIn(response.data.user);
                     window.location.href = '/setting/maps';
                 }
             });
@@ -1104,7 +1151,7 @@ class App extends Component {
     }
 
     renderNavigator() {
-        const logged_in = !!localStorage.getItem('ign');
+        const isLoggedIn = LocalStorageService.checkLogInAndGetIGN();
 
         return (
             <div className="navigator">
@@ -1119,7 +1166,7 @@ class App extends Component {
                 </Link>
                 <div className='right'>
                     <UserSearchForm/>
-                    {logged_in
+                    {isLoggedIn
                         ? 
                         <div className='log_in_div'>
                             <Link to="/setting">
